@@ -4,15 +4,17 @@ import 'package:adhara_socket_io/adhara_socket_io.dart';
 import 'package:super_hero_call/models/super_hero.dart';
 
 typedef OnConnected(Map<String, SuperHero> data);
+typedef OnAssigned = void Function(String superHeroName);
 
 class SocketClient {
   final _manager = SocketIOManager();
   SocketIO _socket;
   OnConnected onConnected;
+  OnAssigned onAssigned;
 
   Future<void> connect() async {
-    final options =
-        SocketOptions("http://192.168.1.35:5000", enableLogging: true);
+    final options = SocketOptions("https://super-hero-call.herokuapp.com",
+        enableLogging: true);
     _socket = await _manager.createInstance(options);
 
     _socket.on('on-connected', (dynamic data) {
@@ -33,6 +35,12 @@ class SocketClient {
         }
       } catch (e) {
         print(e);
+      }
+    });
+
+    _socket.on('on-assigned', (data) {
+      if (onAssigned != null) {
+        onAssigned(data);
       }
     });
 

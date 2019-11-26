@@ -22,7 +22,8 @@ dependencies:
 
   bloc: ^2.0.0
   flutter_bloc: ^2.0.1
-  equatable: ^1.0.1
+  equatable: 1.0.1
+  collection: 1.14.11
   cupertino_icons: ^0.1.2
   adhara_socket_io: ^0.4.1
   cached_network_image: ^1.1.3

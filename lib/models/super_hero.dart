@@ -14,6 +14,15 @@ class SuperHero extends Equatable {
   List<Object> get props =>
       [this.name, this.avatar, this.available, this.inCall];
 
+  SuperHero copyWith(
+      {String name, String avatar, bool available, bool inCall}) {
+    return SuperHero(
+        name: name ?? this.name,
+        avatar: avatar ?? this.avatar,
+        available: available ?? this.available,
+        inCall: inCall ?? this.inCall);
+  }
+
   factory SuperHero.fromJson(Map<String, dynamic> json) => new SuperHero(
       name: json['name'],
       avatar: json['avatar'],
