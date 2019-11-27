@@ -5,12 +5,14 @@ import 'package:super_hero_call/models/super_hero.dart';
 
 typedef OnConnected(Map<String, SuperHero> data);
 typedef OnAssigned = void Function(String superHeroName);
+typedef OnTaken = void Function(String superHeroName);
 
 class SocketClient {
   final _manager = SocketIOManager();
   SocketIO _socket;
   OnConnected onConnected;
   OnAssigned onAssigned;
+  OnAssigned onTaken;
 
   Future<void> connect() async {
     final options = SocketOptions("https://super-hero-call.herokuapp.com",
@@ -41,6 +43,11 @@ class SocketClient {
     _socket.on('on-assigned', (data) {
       if (onAssigned != null) {
         onAssigned(data);
+      }
+    });
+    _socket.on('on-taken', (data) {
+      if (onTaken != null) {
+        onTaken(data);
       }
     });
 

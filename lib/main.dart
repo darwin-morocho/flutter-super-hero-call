@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:super_hero_call/blocs/superheroes_bloc/bloc.dart';
 import 'package:super_hero_call/pages/home.dart';
 
+import 'blocs/me_bloc/me_bloc.dart';
+
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -11,12 +13,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<SuperheroesBloc>(builder: (_) => SuperheroesBloc())
+        BlocProvider<SuperheroesBloc>(builder: (_) => SuperheroesBloc()),
+        BlocProvider<MeBloc>(builder: (_) => MeBloc()),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(
-          primarySwatch: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        darkTheme: ThemeData(
+          brightness: Brightness.dark,
         ),
         home: HomePage(),
         debugShowCheckedModeBanner: false,
