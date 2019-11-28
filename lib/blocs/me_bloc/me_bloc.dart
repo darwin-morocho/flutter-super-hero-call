@@ -2,9 +2,26 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import './bloc.dart';
 
+typedef OnMeEvent = void Function(MeEvent event);
+
 class MeBloc extends Bloc<MeEvent, MeState> {
+  OnMeEvent onMeEvent;
+
   @override
   MeState get initialState => MeState.initialState();
+
+  @override
+  void onEvent(MeEvent event) {
+    super.onEvent(event);
+    if (onMeEvent != null) {
+      onMeEvent(event);
+    }
+  }
+
+  @override
+  Future<void> close() {
+    return super.close();
+  }
 
   @override
   Stream<MeState> mapEventToState(
@@ -20,6 +37,8 @@ class MeBloc extends Bloc<MeEvent, MeState> {
       yield state.copyWith(callFrom: event.hero);
     } else if (event is LeaveMeEvent) {
       yield MeState.initialState();
+    } else if (event is CancelCallMeEvent) {
+      yield MeState(isPicking: false, myHero: state.myHero, callTo: null);
     }
   }
 }

@@ -4,12 +4,18 @@ import 'package:super_hero_call/models/super_hero.dart';
 
 class MeState extends Equatable {
   final bool isPicking;
+  final String requestId;
   final SuperHero myHero, callTo, callFrom;
 
-  MeState({@required this.isPicking, this.myHero, this.callTo, this.callFrom});
+  MeState(
+      {@required this.isPicking,
+      this.myHero,
+      this.callTo,
+      this.callFrom,
+      this.requestId});
 
   @override
-  List<Object> get props => [isPicking, myHero, callTo, callFrom];
+  List<Object> get props => [isPicking, myHero, callTo, callFrom, requestId];
 
   factory MeState.initialState() => MeState(isPicking: false);
 

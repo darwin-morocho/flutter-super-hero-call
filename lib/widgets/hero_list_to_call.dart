@@ -40,38 +40,45 @@ class HeroListToCall extends StatelessWidget {
               return Column(
                 children: superHeroresState.heroes.values
                     .where((hero) => hero.name != meState.myHero.name)
-                    .map((SuperHero item) => Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                  width: 1, color: Color(0xff455A64))),
-                          margin:
-                              EdgeInsets.symmetric(vertical: 5, horizontal: 20),
-                          padding: EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Row(children: <Widget>[
-                                HeroAvatar(
-                                  imageUrl: item.avatar,
-                                  size: 50,
-                                ),
-                                SizedBox(width: 10),
-                                Text(
-                                  item.name,
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ]),
-                              FloatingActionButton(
-                                heroTag: item.name,
-                                onPressed: () {
-                                  meBloc.add(CallToMeEvent(item));
-                                },
-                                child: Icon(Icons.call),
-                                mini: true,
-                              )
-                            ],
+                    .map((SuperHero item) => AbsorbPointer(
+                          absorbing: item.isTaken==false,
+                          child: Opacity(
+                            opacity: item.isTaken ? 1 : 0.3,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(50),
+                                  border: Border.all(
+                                      width: 1, color: Color(0xff455A64))),
+                              margin: EdgeInsets.symmetric(
+                                  vertical: 5, horizontal: 20),
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 10),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: <Widget>[
+                                  Row(children: <Widget>[
+                                    HeroAvatar(
+                                      imageUrl: item.avatar,
+                                      size: 50,
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      item.name,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ]),
+                                  FloatingActionButton(
+                                    heroTag: item.name,
+                                    onPressed: () {
+                                      meBloc.add(CallToMeEvent(item));
+                                    },
+                                    child: Icon(Icons.call),
+                                    mini: true,
+                                  )
+                                ],
+                              ),
+                            ),
                           ),
                         ))
                     .toList(),
@@ -96,6 +103,5 @@ class HeroListToCall extends StatelessWidget {
         ],
       ),
     );
-    ;
   }
 }

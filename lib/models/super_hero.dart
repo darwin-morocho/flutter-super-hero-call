@@ -3,29 +3,29 @@ import 'package:meta/meta.dart' show required;
 
 class SuperHero extends Equatable {
   final String name, avatar;
-  final bool available, inCall;
+  final bool isTaken, inCall;
   SuperHero(
       {@required this.name,
       @required this.avatar,
-      @required this.available,
+      @required this.isTaken,
       @required this.inCall});
 
   @override
   List<Object> get props =>
-      [this.name, this.avatar, this.available, this.inCall];
+      [this.name, this.avatar, this.isTaken, this.inCall];
 
   SuperHero copyWith(
-      {String name, String avatar, bool available, bool inCall}) {
+      {String name, String avatar, bool isTaken, bool inCall}) {
     return SuperHero(
         name: name ?? this.name,
         avatar: avatar ?? this.avatar,
-        available: available ?? this.available,
+        isTaken: isTaken ?? this.isTaken,
         inCall: inCall ?? this.inCall);
   }
 
   factory SuperHero.fromJson(Map<String, dynamic> json) => new SuperHero(
       name: json['name'],
       avatar: json['avatar'],
-      available: json['available'],
+      isTaken: json['isTaken'],
       inCall: json['inCall']);
 }

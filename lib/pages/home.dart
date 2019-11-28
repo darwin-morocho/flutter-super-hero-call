@@ -1,14 +1,15 @@
 import 'dart:async';
 
 import 'package:after_layout/after_layout.dart';
-import 'package:bloc/bloc.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:flutter_webrtc/webrtc.dart';
 import 'package:super_hero_call/blocs/me_bloc/bloc.dart';
 import 'package:super_hero_call/blocs/superheroes_bloc/bloc.dart';
 import 'package:super_hero_call/models/super_hero.dart';
+import 'package:super_hero_call/utils/signaling.dart';
 import 'package:super_hero_call/widgets/hero_avatar.dart';
 import 'package:super_hero_call/widgets/hero_list_to_call.dart';
 import '../utils/socket_client.dart';
@@ -22,15 +23,47 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with AfterLayoutMixin {
-  SocketClient _socketClient = new SocketClient();
-  StreamSubscription _meBlocSubscription;
+  Signaling _signaling = Signaling();
+  final _localRenderer = new RTCVideoRenderer();
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final SocketClient _socketClient = new SocketClient();
 
   SuperheroesBloc _superHeroBloc;
   MeBloc _meBloc;
 
   @override
+  void afterFirstLayout(BuildContext context) {
+    _superHeroBloc = BlocProvider.of<SuperheroesBloc>(context);
+    _meBloc = BlocProvider.of<MeBloc>(context);
+    _meBloc.onMeEvent = (evet) async {
+      if (evet is CallToMeEvent) {
+        // if I am calling
+        final data = _signaling.sendMyOffer(); // get the offer data
+        _socketClient.callTo(evet.hero.name, data); //emit a request call
+      } else if (evet is CancelCallMeEvent) {
+        _socketClient.cancelCall(); // cancel the request call
+      }
+    };
+  }
+
+  @override
   void initState() {
     super.initState();
+
+    _initSocketClient();
+
+    // _signaling.init();
+    // _localRenderer.initialize();
+
+    //
+    // _signaling.onLocalStream = (MediaStream stream) {
+    //   _localRenderer.srcObject = stream;
+    //   _localRenderer.mirror = true;
+    // };
+  }
+
+  _initSocketClient() {
     _socketClient.connect();
     _socketClient.onConnected = (data) {
       _superHeroBloc.add(LoadedSuperheroesEvent(data));
@@ -42,31 +75,51 @@ class _HomePageState extends State<HomePage> with AfterLayoutMixin {
         _meBloc.add(MyHeroMeEvent(hero));
       } else {
         _meBloc.add(PickingMeEvent(false));
-        Scaffold.of(context).showSnackBar(SnackBar(
-          backgroundColor: Colors.red,
-          content: Text("The superhero was taken by other user",
-              style: TextStyle(color: Colors.white)),
-          duration: Duration(microseconds: 400),
-        ));
+        _showSnackBar("The superhero was taken by other user");
       }
     };
 
+    // when a superhero was taken
     _socketClient.onTaken = (superHeroName) {
-      if (superHeroName != null) {}
-      final tmp =
-          _superHeroBloc.state.heroes[superHeroName].copyWith(available: false);
-      _superHeroBloc.add(UpdateSuperheroesEvent(tmp));
+      _superHeroBloc.add(UpdateSuperheroesEvent(superHeroName));
+    };
+
+    // when i recive a call
+    _socketClient.onRequest = (superHeroName, data) {
+      _signaling.gotOffer(data);
+    };
+
+    // if the call that I made was taken or not
+    _socketClient.onResponse = (superHeroName, data) {
+      if (data == null) {
+        // the call was not taken
+        _meBloc.add(PickingMeEvent(false));
+        _showSnackBar("$superHeroName is not available to take your call");
+      }
     };
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  //when you accept or decline one incomming call
+  void _acceptOrDeclineCall(bool accept) async {
+    if (accept) {
+      final data = await _signaling.sendMyAnswer();
+      _socketClient.acceptOrDeclineCall(_meBloc.state.requestId, data);
+    } else {
+      _socketClient.acceptOrDeclineCall(_meBloc.state.requestId, null);
+    }
+  }
+
+  void _showSnackBar(String message) {
+    _scaffoldKey.currentState.showSnackBar(SnackBar(
+      backgroundColor: Colors.red,
+      content: Text(message, style: TextStyle(color: Colors.white)),
+      duration: Duration(seconds: 2),
+    ));
   }
 
   @override
   void dispose() {
-    _meBlocSubscription.cancel();
+    _signaling.dispose();
     _socketClient.disconnect();
     _superHeroBloc.close();
     _meBloc.close();
@@ -103,12 +156,12 @@ class _HomePageState extends State<HomePage> with AfterLayoutMixin {
         Wrap(
           children: heroes.values.map((superHero) {
             return AbsorbPointer(
-              absorbing: !superHero.available,
+              absorbing: superHero.isTaken,
               child: Opacity(
-                  opacity: superHero.available ? 1 : 0.2,
+                  opacity: superHero.isTaken ? 0.2 : 1,
                   child: CupertinoButton(
                     onPressed: () {
-                      if (superHero.available) {
+                      if (superHero.isTaken == false) {
                         _socketClient.pickSuperHero(superHero.name);
                         _meBloc.add(PickingMeEvent(true));
                       }
@@ -137,29 +190,35 @@ class _HomePageState extends State<HomePage> with AfterLayoutMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Color(0xff263238),
       body: Container(
         width: double.infinity,
         child: SafeArea(
-          child: Me(
-            pickHero: BlocBuilder<SuperheroesBloc, SuperheroesState>(
-              builder: (_, state) {
-                if (state.isLoading) {
-                  return _loading();
-                }
-                return _heroList(state.heroes);
-              },
-            ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              Me(
+                pickHero: BlocBuilder<SuperheroesBloc, SuperheroesState>(
+                  builder: (_, state) {
+                    if (state.isLoading) {
+                      return _loading();
+                    }
+                    return _heroList(state.heroes);
+                  },
+                ),
+              ),
+              // Positioned(
+              //     left: 10,
+              //     bottom: 20,
+              //     width: 200,
+              //     height: 300,
+              //     child: RTCVideoView(this._localRenderer))
+            ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void afterFirstLayout(BuildContext context) {
-    _superHeroBloc = BlocProvider.of<SuperheroesBloc>(context);
-    _meBloc = BlocProvider.of<MeBloc>(context);
   }
 }
 
@@ -170,6 +229,7 @@ class Me extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final meBloc = BlocProvider.of<MeBloc>(context);
+
     return BlocBuilder<MeBloc, MeState>(
       builder: (_, meState) {
         if (meState.isPicking) {
@@ -217,7 +277,7 @@ class Me extends StatelessWidget {
                   children: <Widget>[
                     FloatingActionButton(
                       onPressed: () {
-                        meBloc.add(PickingMeEvent(false));
+                        meBloc.add(CancelCallMeEvent());
                       },
                       child: Icon(Icons.call_end),
                       backgroundColor: Colors.redAccent,

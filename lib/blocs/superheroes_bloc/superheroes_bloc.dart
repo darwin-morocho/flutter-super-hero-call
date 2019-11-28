@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:super_hero_call/models/super_hero.dart';
 import './bloc.dart';
 
 class SuperheroesBloc extends Bloc<SuperheroesEvent, SuperheroesState> {
@@ -24,7 +23,9 @@ class SuperheroesBloc extends Bloc<SuperheroesEvent, SuperheroesState> {
   }
 
   Stream<SuperheroesState> _mapUpdate(UpdateSuperheroesEvent event) async* {
-    SuperheroesState newState = state.update(event.hero);
+    final hero = state.heroes[event.heroName].copyWith(isTaken: true);
+
+    SuperheroesState newState = state.update(hero);
     if (newState != null) {
       yield newState;
     }

@@ -29,6 +29,8 @@ class CallToMeEvent extends MeEvent {
   CallToMeEvent(this.hero) : super([hero]);
 }
 
+class CancelCallMeEvent extends MeEvent {}
+
 class CallFromMeEvent extends MeEvent {
   final SuperHero hero;
 

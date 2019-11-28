@@ -1,23 +1,27 @@
 import 'dart:convert';
-
-import 'package:adhara_socket_io/adhara_socket_io.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:super_hero_call/models/super_hero.dart';
 
 typedef OnConnected(Map<String, SuperHero> data);
 typedef OnAssigned = void Function(String superHeroName);
 typedef OnTaken = void Function(String superHeroName);
+typedef OnResponse = void Function(String superHeroName, dynamic data);
+typedef OnRequest = void Function(String superHeroName, dynamic data);
 
 class SocketClient {
-  final _manager = SocketIOManager();
-  SocketIO _socket;
+  IO.Socket _socket;
   OnConnected onConnected;
   OnAssigned onAssigned;
   OnAssigned onTaken;
+  OnResponse onResponse;
+  OnRequest onRequest;
 
   Future<void> connect() async {
-    final options = SocketOptions("https://super-hero-call.herokuapp.com",
-        enableLogging: true);
-    _socket = await _manager.createInstance(options);
+    const uri = "http://192.168.100.19:5000";
+    // const uri = "https://super-hero-call.herokuapp.com";
+    _socket = IO.io(uri, <String, dynamic>{
+      'transports': ['websocket'],
+    });
 
     _socket.on('on-connected', (dynamic data) {
       try {
@@ -26,7 +30,6 @@ class SocketClient {
         final tmp = new Map<String, dynamic>.from(jsonDecode(jsonEncode(data)));
 
         tmp.forEach((key, value) {
-          print("value $value");
           final superHero = SuperHero.fromJson(value);
           mapData[key] = superHero;
         });
@@ -51,27 +54,40 @@ class SocketClient {
       }
     });
 
-    _socket.onConnectError((error) {
-      print(error);
+    _socket.on('on-request', (data) {
+      if (onRequest != null) {
+        onRequest(data['superHeroName'], data['data']);
+      }
     });
 
-    _socket.onError((error) {
-      print(error);
+    _socket.on('on-response', (data) {
+      if (onResponse != null) {
+        onResponse(data['superHeroName'], data['data']);
+      }
     });
-
-    _socket.connect();
   }
 
   void pickSuperHero(String superHeroName) {
-    _socket?.emit('pick', [superHeroName]);
+    _socket?.emit('pick', superHeroName);
   }
 
-  /**
-   * 
-   */
-  Future<void> disconnect() async {
+  void callTo(String superHeroName, dynamic data) {
+    _socket?.emit('request', {"superHeroName": superHeroName, "data": data});
+  }
+
+  void cancelCall() {
+    _socket?.emit('cancel-request');
+  }
+
+  void acceptOrDeclineCall(String requestId, dynamic data) {
+    _socket?.emit('response', {"requestId": requestId, "data": data});
+  }
+
+  disconnect() async {
     if (_socket != null) {
-      _manager.clearInstance(_socket);
+      _socket.disconnect();
+      _socket.close();
+      _socket = null;
     }
   }
 }

@@ -17,6 +17,6 @@ class LoadedSuperheroesEvent extends SuperheroesEvent {
 }
 
 class UpdateSuperheroesEvent extends SuperheroesEvent {
-  final SuperHero hero;
-  UpdateSuperheroesEvent(this.hero) : super([hero]);
+  final String heroName;
+  UpdateSuperheroesEvent(this.heroName) : super([heroName]);
 }
