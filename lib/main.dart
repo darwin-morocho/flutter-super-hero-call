@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:super_hero_call/blocs/superheroes_bloc/bloc.dart';
 import 'package:super_hero_call/pages/home.dart';
 
-import 'blocs/me_bloc/me_bloc.dart';
+import 'blocs/me_bloc/app_state_bloc.dart';
 
 void main() => runApp(MyApp());
 
@@ -13,8 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<SuperheroesBloc>(builder: (_) => SuperheroesBloc()),
-        BlocProvider<MeBloc>(builder: (_) => MeBloc()),
+        BlocProvider<AppStateBloc>(builder: (_) => AppStateBloc()),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',

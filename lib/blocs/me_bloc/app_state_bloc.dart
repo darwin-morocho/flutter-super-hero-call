@@ -2,17 +2,13 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:super_hero_call/models/super_hero.dart';
 import 'package:super_hero_call/utils/socket_client.dart';
-import 'me_event.dart' as Event;
-import 'me_state.dart';
+import 'app_state_event.dart' as Event;
+import 'app_state.dart';
 
-typedef OnMeEvent = void Function(Event.MeEvent event);
-
-class MeBloc extends Bloc<Event.MeEvent, MeState> {
-  OnMeEvent onMeEvent;
-
+class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
   SocketClient _socketClient = SocketClient();
 
-  MeBloc() {
+  AppStateBloc() {
     _initSocketClient();
   }
 
@@ -77,14 +73,11 @@ class MeBloc extends Bloc<Event.MeEvent, MeState> {
   }
 
   @override
-  MeState get initialState => MeState.initialState();
+  AppState get initialState => AppState.initialState();
 
   @override
-  void onEvent(Event.MeEvent event) {
+  void onEvent(Event.AppStateEvent event) {
     super.onEvent(event);
-    if (onMeEvent != null) {
-      onMeEvent(event);
-    }
   }
 
   @override
@@ -94,12 +87,10 @@ class MeBloc extends Bloc<Event.MeEvent, MeState> {
   }
 
   @override
-  Stream<MeState> mapEventToState(
-    Event.MeEvent event,
+  Stream<AppState> mapEventToState(
+    Event.AppStateEvent event,
   ) async* {
-     print("event $event");
     if (event is Event.Picker) {
-     
       yield state.copyWith(status: Status.picking, heroes: event.heroes);
     } else if (event is Event.Pick) {
       _socketClient.pickSuperHero(event.hero.name);
@@ -138,7 +129,7 @@ class MeBloc extends Bloc<Event.MeEvent, MeState> {
     }
   }
 
-  Stream<MeState> getConnected(SuperHero hero) async* {
+  Stream<AppState> getConnected(SuperHero hero) async* {
     yield state.copyWith(
         status: Status.connected,
         heroes: state.heroes,

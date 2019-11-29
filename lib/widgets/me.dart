@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:super_hero_call/blocs/me_bloc/me_bloc.dart';
-import 'package:super_hero_call/blocs/me_bloc/me_event.dart' as MeEvent;
-import 'package:super_hero_call/blocs/me_bloc/me_state.dart';
+import 'package:super_hero_call/blocs/me_bloc/app_state_bloc.dart';
+import 'package:super_hero_call/blocs/me_bloc/app_state_event.dart' as MeEvent;
+import 'package:super_hero_call/blocs/me_bloc/app_state.dart';
 import 'package:super_hero_call/models/super_hero.dart';
 
 import 'hero_avatar.dart';
@@ -19,9 +19,9 @@ class Me extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final meBloc = BlocProvider.of<MeBloc>(context);
+    final appStateBloc = BlocProvider.of<AppStateBloc>(context);
 
-    return BlocBuilder<MeBloc, MeState>(
+    return BlocBuilder<AppStateBloc, AppState>(
       builder: (_, state) {
         switch (state.status) {
           case Status.loading:
@@ -33,21 +33,20 @@ class Me extends StatelessWidget {
             return HeroPicker(
               heroes: state.heroes,
               onPicked: (hero) {
-                meBloc.add(MeEvent.Pick(hero));
+                appStateBloc.add(MeEvent.Pick(hero));
               },
             );
 
           case Status.connected:
-            return HeroListToCall(
-              meState: state,
-            );
+            return HeroListToCall();
 
           case Status.calling:
             return CallView(
               hero: state.him,
               amICaller: true,
               onCancelRequest: () {
-                meBloc.add(MeEvent.Connected(state.me, cancelRequest: true));
+                appStateBloc
+                    .add(MeEvent.Connected(state.me, cancelRequest: true));
               },
             );
 

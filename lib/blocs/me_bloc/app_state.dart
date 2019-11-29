@@ -4,19 +4,19 @@ import 'package:super_hero_call/models/super_hero.dart';
 
 enum Status { loading, picking, connected, calling, incomming, inCalling }
 
-class MeState extends Equatable {
+class AppState extends Equatable {
   final Status status;
   final String requestId;
   final SuperHero me, him;
   final Map<String, SuperHero> heroes;
 
-  MeState(
+  AppState(
       {@required this.status, this.requestId, this.me, this.him, this.heroes});
 
   @override
   List<Object> get props => [status, requestId, me, him, heroes];
 
-  factory MeState.initialState() => MeState(status: Status.loading);
+  factory AppState.initialState() => AppState(status: Status.loading);
 
   copyWith(
       {@required Status status,
@@ -24,7 +24,7 @@ class MeState extends Equatable {
       SuperHero me,
       Map<String, SuperHero> heroes,
       SuperHero him}) {
-    return MeState(
+    return AppState(
         status: status,
         requestId: requestId ?? this.requestId,
         me: me ?? this.me,
@@ -37,7 +37,7 @@ class MeState extends Equatable {
     tmp.addAll(heroes);
     tmp[heroName] = tmp[heroName].copyWith(isTaken: isTaken);
 
-    return MeState(
+    return AppState(
         status: status,
         requestId: this.requestId,
         me: this.me,
