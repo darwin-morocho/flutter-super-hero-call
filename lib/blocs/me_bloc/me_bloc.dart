@@ -20,28 +20,28 @@ class MeBloc extends Bloc<Event.MeEvent, MeState> {
     _socketClient.connect();
     _socketClient.onConnected = (heroes) {
       print("connected");
-      mapEventToState(Event.Picker(heroes));
+      add(Event.Picker(heroes));
     };
 
     _socketClient.onAssigned = (superHeroName) {
       if (superHeroName != null) {
         final hero = state.heroes[superHeroName];
-        mapEventToState(Event.Connected(hero));
+        add(Event.Connected(hero));
       } else {
-        mapEventToState(Event.Picker(state.heroes));
+        add(Event.Picker(state.heroes));
         // _showSnackBar("The superhero was taken by other user");
       }
     };
 
     // when a superhero was taken
     _socketClient.onTaken = (superHeroName) {
-      mapEventToState(Event.UpdateHero(true, superHeroName));
+      add(Event.UpdateHero(true, superHeroName));
     };
 
     // when a superhero was taken
     _socketClient.onDisconnected = (superHeroName) {
       print("disconnected $superHeroName");
-      mapEventToState(Event.UpdateHero(false, superHeroName));
+      add(Event.UpdateHero(false, superHeroName));
     };
 
     // when i recive a call
@@ -49,30 +49,30 @@ class MeBloc extends Bloc<Event.MeEvent, MeState> {
       final superHeroName = requestData['superHeroName'];
       final requestId = requestData['requestId'];
       final hero = state.heroes[superHeroName];
-      mapEventToState(Event.Incomming(requestId, hero));
+      add(Event.Incomming(requestId, hero));
       //_signaling.gotOffer(requestData['data']);
     };
 
     // when the calleer cancel the request
     _socketClient.onCancelRequest = () {
       print("onCancelRequest");
-      mapEventToState(Event.Connected(state.me));
+      add(Event.Connected(state.me));
     };
 
     // if the call that I made was taken or not
     _socketClient.onResponse = (superHeroName, data) {
       if (data == null) {
         // the call was not taken
-        mapEventToState(Event.Connected(state.me));
+        add(Event.Connected(state.me));
         //_showSnackBar("$superHeroName is not available to take your call");
       } else {
-        mapEventToState(Event.InCalling());
+        add(Event.InCalling());
       }
     };
 
     // whe the other user finish the call
     _socketClient.onFinish = () {
-      mapEventToState(Event.Connected(state.me));
+      add(Event.Connected(state.me));
     };
   }
 
@@ -125,10 +125,10 @@ class MeBloc extends Bloc<Event.MeEvent, MeState> {
       if (event.accept) {
         //final data = await _signaling.sendMyAnswer();
         _socketClient.acceptOrDeclineCall(state.requestId, 'data');
-        mapEventToState(Event.InCalling());
+        add(Event.InCalling());
       } else {
         _socketClient.acceptOrDeclineCall(state.requestId, null);
-        mapEventToState(Event.Connected(state.me, cancelRequest: false));
+        add(Event.Connected(state.me, cancelRequest: false));
       }
     } else if (event is Event.InCalling) {
       yield state.copyWith(status: Status.inCalling);
