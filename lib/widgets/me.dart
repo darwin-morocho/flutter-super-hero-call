@@ -9,16 +9,12 @@ import 'package:super_hero_call/models/super_hero.dart';
 
 import 'hero_avatar.dart';
 import 'hero_list_to_call.dart';
+import 'hero_picker.dart';
 
 class Me extends StatelessWidget {
-  final Widget pickHero;
   final VoidCallback onFinishCall;
   final Function(bool) onAcceptOrDecline;
-  const Me(
-      {Key key,
-      @required this.pickHero,
-      this.onAcceptOrDecline,
-      this.onFinishCall})
+  const Me({Key key, this.onAcceptOrDecline, this.onFinishCall})
       : super(key: key);
 
   @override
@@ -27,15 +23,19 @@ class Me extends StatelessWidget {
 
     return BlocBuilder<MeBloc, MeState>(
       builder: (_, state) {
-        print("me stattus ${state.status}");
         switch (state.status) {
-          case Status.connecting:
+          case Status.loading:
             return Center(
                 child: CupertinoActivityIndicator(
               radius: 15,
             ));
           case Status.picking:
-            return pickHero;
+            return HeroPicker(
+              heroes: state.heroes,
+              onPicked: (hero) {
+                meBloc.add(MeEvent.Pick(hero));
+              },
+            );
 
           case Status.connected:
             return HeroListToCall(

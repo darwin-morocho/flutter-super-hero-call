@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:super_hero_call/blocs/me_bloc/me_bloc.dart';
 import 'package:super_hero_call/blocs/me_bloc/me_event.dart' as MeEvent;
 import 'package:super_hero_call/blocs/me_bloc/me_state.dart';
-import 'package:super_hero_call/blocs/superheroes_bloc/bloc.dart';
 import 'package:super_hero_call/models/super_hero.dart';
 
 import 'hero_avatar.dart';
@@ -36,10 +35,10 @@ class HeroListToCall extends StatelessWidget {
               ),
             ],
           ),
-          BlocBuilder<SuperheroesBloc, SuperheroesState>(
-            builder: (_, superHeroresState) {
+          BlocBuilder<MeBloc, MeState>(
+            builder: (_, state) {
               return Column(
-                children: superHeroresState.heroes.values
+                children: state.heroes.values
                     .where((hero) => hero.name != meState.me.name)
                     .map((SuperHero item) => AbsorbPointer(
                           absorbing: item.isTaken == false,

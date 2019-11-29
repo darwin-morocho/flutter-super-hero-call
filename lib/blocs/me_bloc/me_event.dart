@@ -10,10 +10,22 @@ class MeEvent extends Equatable {
   List<Object> get props => _props;
 }
 
-class Picking extends MeEvent {
-  final bool isPicking;
+class Picker extends MeEvent {
+  final Map<String, SuperHero> heroes;
 
-  Picking(this.isPicking) : super([isPicking]);
+  Picker(this.heroes) : super([heroes]);
+}
+
+class Pick extends MeEvent {
+  final SuperHero hero;
+  Pick(this.hero) : super([hero]);
+}
+
+class UpdateHero extends MeEvent {
+  final bool isTaken;
+  final String heroName;
+
+  UpdateHero(this.isTaken, this.heroName) : super([isTaken, heroName]);
 }
 
 class Connected extends MeEvent {
@@ -34,4 +46,12 @@ class Incomming extends MeEvent {
   Incomming(this.requestId, this.hero) : super([requestId, hero]);
 }
 
+class AcceptOrDecline extends MeEvent {
+  final bool accept;
+
+  AcceptOrDecline(this.accept) : super([accept]);
+}
+
 class InCalling extends MeEvent {}
+
+class FinishCall extends MeEvent {}

@@ -8,9 +8,7 @@ import 'package:super_hero_call/blocs/me_bloc/me_event.dart' as MeEvent;
 import 'package:super_hero_call/blocs/superheroes_bloc/bloc.dart';
 
 import 'package:super_hero_call/utils/signaling.dart';
-import 'package:super_hero_call/widgets/hero_picker.dart';
 import 'package:super_hero_call/widgets/me.dart';
-import '../utils/socket_client.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
@@ -20,36 +18,21 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with AfterLayoutMixin {
-  Signaling _signaling = Signaling();
-  final _localRenderer = new RTCVideoRenderer();
+  // Signaling _signaling = Signaling();
+  //final _localRenderer = new RTCVideoRenderer();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final SocketClient _socketClient = new SocketClient();
-
   SuperheroesBloc _superHeroBloc;
   MeBloc _meBloc;
 
   @override
   void afterFirstLayout(BuildContext context) {
-    _superHeroBloc = BlocProvider.of<SuperheroesBloc>(context);
     _meBloc = BlocProvider.of<MeBloc>(context);
-    _meBloc.onMeEvent = (event) async {
-      print("event ${event}");
-
-      if (event is MeEvent.Calling) {
-        //final data = await _signaling.sendMyOffer(); // get the offer data
-        _socketClient.callTo(event.hero.name, 'data'); //emit a request call
-      } else if (event is MeEvent.Connected && event.cancelRequest) {
-        _socketClient.cancelCall(); // cancel the request call
-      }
-    };
   }
 
   @override
   void initState() {
     super.initState();
-
-    _initSocketClient();
 
     //_signaling.init();
     //_localRenderer.initialize();
@@ -58,78 +41,6 @@ class _HomePageState extends State<HomePage> with AfterLayoutMixin {
     //   _localRenderer.srcObject = stream;
     //   _localRenderer.mirror = true;
     // };
-  }
-
-  _initSocketClient() {
-    _socketClient.connect();
-    _socketClient.onConnected = (data) {
-      _superHeroBloc.add(LoadedSuperheroesEvent(data));
-      _meBloc.add(MeEvent.Picking(false));
-    };
-
-    _socketClient.onAssigned = (superHeroName) {
-      if (superHeroName != null) {
-        final hero = _superHeroBloc.state.heroes[superHeroName];
-        _meBloc.add(MeEvent.Connected(hero));
-      } else {
-        _meBloc.add(MeEvent.Picking(false));
-        _showSnackBar("The superhero was taken by other user");
-      }
-    };
-
-    // when a superhero was taken
-    _socketClient.onTaken = (superHeroName) {
-      _superHeroBloc.add(UpdateSuperheroesEvent(superHeroName, true));
-    };
-
-    // when a superhero was taken
-    _socketClient.onDisconnected = (superHeroName) {
-      print("disconnected $superHeroName");
-      _superHeroBloc.add(UpdateSuperheroesEvent(superHeroName, false));
-    };
-
-    // when i recive a call
-    _socketClient.onRequest = (dynamic requestData) {
-      final superHeroName = requestData['superHeroName'];
-      final requestId = requestData['requestId'];
-      final hero = _superHeroBloc.state.heroes[superHeroName];
-      _meBloc.add(MeEvent.Incomming(requestId, hero));
-      _signaling.gotOffer(requestData['data']);
-    };
-
-    // when the calleer cancel the request
-    _socketClient.onCancelRequest = () {
-      print("onCancelRequest");
-      _meBloc.add(MeEvent.Connected(_meBloc.state.me));
-    };
-
-    // if the call that I made was taken or not
-    _socketClient.onResponse = (superHeroName, data) {
-      if (data == null) {
-        // the call was not taken
-        _meBloc.add(MeEvent.Connected(_meBloc.state.me));
-        _showSnackBar("$superHeroName is not available to take your call");
-      } else {
-        _meBloc.add(MeEvent.InCalling());
-      }
-    };
-
-    // whe the other user finish the call
-    _socketClient.onFinish = () {
-      _meBloc.add(MeEvent.Connected(_meBloc.state.me));
-    };
-  }
-
-  //when you accept or decline one incomming call
-  void _acceptOrDeclineCall(bool accept) async {
-    if (accept) {
-      //final data = await _signaling.sendMyAnswer();
-      _socketClient.acceptOrDeclineCall(_meBloc.state.requestId, 'data');
-      _meBloc.add(MeEvent.InCalling());
-    } else {
-      _socketClient.acceptOrDeclineCall(_meBloc.state.requestId, null);
-      _meBloc.add(MeEvent.Connected(_meBloc.state.me, cancelRequest: false));
-    }
   }
 
   void _showSnackBar(String message) {
@@ -142,9 +53,7 @@ class _HomePageState extends State<HomePage> with AfterLayoutMixin {
 
   @override
   void dispose() {
-    _signaling.dispose();
-    _socketClient.disconnect();
-    _superHeroBloc.close();
+    // _signaling.dispose();
     _meBloc.close();
     super.dispose();
   }
@@ -167,26 +76,11 @@ class _HomePageState extends State<HomePage> with AfterLayoutMixin {
             children: <Widget>[
               Me(
                 onFinishCall: () {
-                  _meBloc.add(MeEvent.Connected(_meBloc.state.me));
-                  _socketClient.finishCall();
+                  _meBloc.add(MeEvent.FinishCall());
                 },
                 onAcceptOrDecline: (bool accept) {
-                  _acceptOrDeclineCall(accept);
+                  _meBloc.add(MeEvent.AcceptOrDecline(accept));
                 },
-                pickHero: BlocBuilder<SuperheroesBloc, SuperheroesState>(
-                  builder: (_, state) {
-                    if (state.isLoading) {
-                      return _loading();
-                    }
-                    return HeroPicker(
-                      heroes: state.heroes,
-                      onPicked: (heroName) {
-                        _socketClient.pickSuperHero(heroName);
-                        _meBloc.add(MeEvent.Picking(true));
-                      },
-                    );
-                  },
-                ),
               ),
             ],
           ),
