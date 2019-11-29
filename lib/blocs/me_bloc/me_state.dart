@@ -2,32 +2,29 @@ import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart' show required;
 import 'package:super_hero_call/models/super_hero.dart';
 
-class MeState extends Equatable {
-  final bool isPicking;
-  final String requestId;
-  final SuperHero myHero, callTo, callFrom;
+enum Status { connecting, picking, connected, calling, incomming, inCalling }
 
-  MeState(
-      {@required this.isPicking,
-      this.myHero,
-      this.callTo,
-      this.callFrom,
-      this.requestId});
+class MeState extends Equatable {
+  final Status status;
+  final String requestId;
+  final SuperHero me, him;
+
+  MeState({@required this.status, this.requestId, this.me, this.him});
 
   @override
-  List<Object> get props => [isPicking, myHero, callTo, callFrom, requestId];
+  List<Object> get props => [status, requestId, me, him];
 
-  factory MeState.initialState() => MeState(isPicking: false);
+  factory MeState.initialState() => MeState(status: Status.connecting);
 
-  MeState copyWith(
-      {bool isPicking,
-      SuperHero myHero,
-      SuperHero callTo,
-      SuperHero callFrom}) {
+  copyWith(
+      {@required Status status,
+      String requestId,
+      SuperHero me,
+      SuperHero him}) {
     return MeState(
-        isPicking: isPicking ?? this.isPicking,
-        myHero: myHero ?? this.myHero,
-        callTo: callTo ?? this.callTo,
-        callFrom: callFrom ?? this.callFrom);
+        status: status,
+        requestId: requestId ?? this.requestId,
+        me: me ?? this.me,
+        him: him ?? this.him);
   }
 }

@@ -47,7 +47,7 @@ class Signaling {
     };
 
     _localStream = await navigator
-        .getDisplayMedia(mediaConstraints); // get the user media stream
+        .getUserMedia(mediaConstraints); // get the user media stream
 
     if (onLocalStream != null) {
       //send the my stream to home screen

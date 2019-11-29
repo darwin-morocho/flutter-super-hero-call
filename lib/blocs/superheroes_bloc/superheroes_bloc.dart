@@ -10,7 +10,6 @@ class SuperheroesBloc extends Bloc<SuperheroesEvent, SuperheroesState> {
   Stream<SuperheroesState> mapEventToState(
     SuperheroesEvent event,
   ) async* {
-    print("event $event");
     if (event is LoadedSuperheroesEvent) {
       yield* _mapLoaded(event);
     } else if (event is UpdateSuperheroesEvent) {
@@ -23,7 +22,7 @@ class SuperheroesBloc extends Bloc<SuperheroesEvent, SuperheroesState> {
   }
 
   Stream<SuperheroesState> _mapUpdate(UpdateSuperheroesEvent event) async* {
-    final hero = state.heroes[event.heroName].copyWith(isTaken: true);
+    final hero = state.heroes[event.heroName].copyWith(isTaken: event.istaken);
 
     SuperheroesState newState = state.update(hero);
     if (newState != null) {

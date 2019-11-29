@@ -9,14 +9,14 @@ abstract class SuperheroesEvent extends Equatable {
   List<Object> get props => _props;
 }
 
-
-
 class LoadedSuperheroesEvent extends SuperheroesEvent {
-  final Map<String,SuperHero> heroes;
+  final Map<String, SuperHero> heroes;
   LoadedSuperheroesEvent(this.heroes) : super([heroes]);
 }
 
 class UpdateSuperheroesEvent extends SuperheroesEvent {
   final String heroName;
-  UpdateSuperheroesEvent(this.heroName) : super([heroName]);
+  final bool istaken;
+  UpdateSuperheroesEvent(this.heroName, this.istaken)
+      : super([heroName, istaken]);
 }

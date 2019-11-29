@@ -6,7 +6,10 @@ typedef OnConnected(Map<String, SuperHero> data);
 typedef OnAssigned = void Function(String superHeroName);
 typedef OnTaken = void Function(String superHeroName);
 typedef OnResponse = void Function(String superHeroName, dynamic data);
-typedef OnRequest = void Function(String superHeroName, dynamic data);
+typedef OnRequest = void Function(dynamic data);
+typedef OnCancelRequest = void Function();
+typedef OnDisconnected = void Function(String superHeroName);
+typedef OnFinish = void Function();
 
 class SocketClient {
   IO.Socket _socket;
@@ -15,6 +18,9 @@ class SocketClient {
   OnAssigned onTaken;
   OnResponse onResponse;
   OnRequest onRequest;
+  OnCancelRequest onCancelRequest;
+  OnDisconnected onDisconnected;
+  OnFinish onFinish;
 
   Future<void> connect() async {
     const uri = "http://192.168.100.19:5000";
@@ -55,14 +61,33 @@ class SocketClient {
     });
 
     _socket.on('on-request', (data) {
+      print("on-request");
       if (onRequest != null) {
-        onRequest(data['superHeroName'], data['data']);
+        onRequest(data);
+      }
+    });
+
+    _socket.on('on-cancel-request', (_) {
+      if (onCancelRequest != null) {
+        onCancelRequest();
       }
     });
 
     _socket.on('on-response', (data) {
       if (onResponse != null) {
         onResponse(data['superHeroName'], data['data']);
+      }
+    });
+
+    _socket.on('on-disconnected', (data) {
+      if (onDisconnected != null) {
+        onDisconnected(data);
+      }
+    });
+
+    _socket.on('on-finish-call', (_) {
+      if (onFinish != null) {
+        onFinish();
       }
     });
   }
@@ -77,6 +102,10 @@ class SocketClient {
 
   void cancelCall() {
     _socket?.emit('cancel-request');
+  }
+
+  void finishCall() {
+    _socket?.emit('finish-call');
   }
 
   void acceptOrDeclineCall(String requestId, dynamic data) {

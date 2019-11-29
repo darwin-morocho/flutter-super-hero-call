@@ -10,29 +10,28 @@ class MeEvent extends Equatable {
   List<Object> get props => _props;
 }
 
-class PickingMeEvent extends MeEvent {
+class Picking extends MeEvent {
   final bool isPicking;
 
-  PickingMeEvent(this.isPicking) : super([isPicking]);
+  Picking(this.isPicking) : super([isPicking]);
 }
 
-class LeaveMeEvent extends MeEvent {}
-
-class MyHeroMeEvent extends MeEvent {
+class Connected extends MeEvent {
   final SuperHero hero;
-  MyHeroMeEvent(this.hero) : super([hero]);
+  final bool cancelRequest;
+  Connected(this.hero, {this.cancelRequest = false})
+      : super([hero, cancelRequest]);
 }
 
-class CallToMeEvent extends MeEvent {
+class Calling extends MeEvent {
   final SuperHero hero;
-
-  CallToMeEvent(this.hero) : super([hero]);
+  Calling(this.hero) : super([hero]);
 }
 
-class CancelCallMeEvent extends MeEvent {}
-
-class CallFromMeEvent extends MeEvent {
+class Incomming extends MeEvent {
+  final String requestId;
   final SuperHero hero;
-
-  CallFromMeEvent(this.hero) : super([hero]);
+  Incomming(this.requestId, this.hero) : super([requestId, hero]);
 }
+
+class InCalling extends MeEvent {}

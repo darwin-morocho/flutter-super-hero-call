@@ -1,17 +1,18 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import './bloc.dart';
+import 'me_event.dart' as Event;
+import 'me_state.dart';
 
-typedef OnMeEvent = void Function(MeEvent event);
+typedef OnMeEvent = void Function(Event.MeEvent event);
 
-class MeBloc extends Bloc<MeEvent, MeState> {
+class MeBloc extends Bloc<Event.MeEvent, MeState> {
   OnMeEvent onMeEvent;
 
   @override
   MeState get initialState => MeState.initialState();
 
   @override
-  void onEvent(MeEvent event) {
+  void onEvent(Event.MeEvent event) {
     super.onEvent(event);
     if (onMeEvent != null) {
       onMeEvent(event);
@@ -25,20 +26,22 @@ class MeBloc extends Bloc<MeEvent, MeState> {
 
   @override
   Stream<MeState> mapEventToState(
-    MeEvent event,
+    Event.MeEvent event,
   ) async* {
-    if (event is PickingMeEvent) {
-      yield MeState(isPicking: event.isPicking, myHero: state.myHero);
-    } else if (event is MyHeroMeEvent) {
-      yield state.copyWith(isPicking: false, myHero: event.hero);
-    } else if (event is CallToMeEvent) {
-      yield state.copyWith(callTo: event.hero);
-    } else if (event is CallFromMeEvent) {
-      yield state.copyWith(callFrom: event.hero);
-    } else if (event is LeaveMeEvent) {
-      yield MeState.initialState();
-    } else if (event is CancelCallMeEvent) {
-      yield MeState(isPicking: false, myHero: state.myHero, callTo: null);
+    if (event is Event.Picking) {
+      yield MeState(status: Status.picking);
+    } else if (event is Event.Connected) {
+      yield MeState(
+          me: event.hero, status: Status.connected, him: null, requestId: null);
+    } else if (event is Event.Calling) {
+      yield state.copyWith(status: Status.calling, him: event.hero);
+    } else if (event is Event.Incomming) {
+      yield state.copyWith(
+          status: Status.incomming,
+          him: event.hero,
+          requestId: event.requestId);
+    } else if (event is Event.InCalling) {
+      yield state.copyWith(status: Status.inCalling);
     }
   }
 }

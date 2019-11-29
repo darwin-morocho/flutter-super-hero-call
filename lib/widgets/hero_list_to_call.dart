@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:super_hero_call/blocs/me_bloc/bloc.dart';
+import 'package:super_hero_call/blocs/me_bloc/me_bloc.dart';
+import 'package:super_hero_call/blocs/me_bloc/me_event.dart' as MeEvent;
 import 'package:super_hero_call/blocs/me_bloc/me_state.dart';
 import 'package:super_hero_call/blocs/superheroes_bloc/bloc.dart';
 import 'package:super_hero_call/models/super_hero.dart';
@@ -27,10 +28,10 @@ class HeroListToCall extends StatelessWidget {
         children: <Widget>[
           Column(
             children: <Widget>[
-              HeroAvatar(imageUrl: meState.myHero.avatar),
+              HeroAvatar(imageUrl: meState.me.avatar),
               SizedBox(height: 10),
               Text(
-                meState.myHero.name,
+                meState.me.name,
                 style: TextStyle(color: Colors.white),
               ),
             ],
@@ -39,9 +40,9 @@ class HeroListToCall extends StatelessWidget {
             builder: (_, superHeroresState) {
               return Column(
                 children: superHeroresState.heroes.values
-                    .where((hero) => hero.name != meState.myHero.name)
+                    .where((hero) => hero.name != meState.me.name)
                     .map((SuperHero item) => AbsorbPointer(
-                          absorbing: item.isTaken==false,
+                          absorbing: item.isTaken == false,
                           child: Opacity(
                             opacity: item.isTaken ? 1 : 0.3,
                             child: Container(
@@ -71,7 +72,7 @@ class HeroListToCall extends StatelessWidget {
                                   FloatingActionButton(
                                     heroTag: item.name,
                                     onPressed: () {
-                                      meBloc.add(CallToMeEvent(item));
+                                      meBloc.add(MeEvent.Calling(item));
                                     },
                                     child: Icon(Icons.call),
                                     mini: true,
@@ -85,21 +86,6 @@ class HeroListToCall extends StatelessWidget {
               );
             },
           ),
-          CupertinoButton(
-            onPressed: () {},
-            padding: EdgeInsets.zero,
-            child: Container(
-              width: 70,
-              height: 70,
-              child: Icon(
-                Icons.power_settings_new,
-                color: Colors.white,
-                size: 50,
-              ),
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle, color: Colors.redAccent),
-            ),
-          )
         ],
       ),
     );

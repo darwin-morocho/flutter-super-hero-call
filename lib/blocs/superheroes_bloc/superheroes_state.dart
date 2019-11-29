@@ -1,7 +1,8 @@
-
+import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart' show required;
 import 'package:super_hero_call/models/super_hero.dart';
 import 'package:collection/collection.dart';
+
 
 class SuperheroesState {
   final bool isLoading;
