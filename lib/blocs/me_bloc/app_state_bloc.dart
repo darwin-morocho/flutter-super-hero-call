@@ -13,6 +13,7 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
   }
 
   _initSocketClient() {
+    print("connecting to ws");
     _socketClient.connect();
     _socketClient.onConnected = (heroes) {
       print("connected");
@@ -82,7 +83,7 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
 
   @override
   Future<void> close() {
-    _socketClient.disconnect();
+    _socketClient?.disconnect();
     return super.close();
   }
 

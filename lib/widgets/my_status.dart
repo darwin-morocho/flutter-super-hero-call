@@ -3,19 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:super_hero_call/blocs/me_bloc/app_state_bloc.dart';
-import 'package:super_hero_call/blocs/me_bloc/app_state_event.dart' as MeEvent;
+import 'package:super_hero_call/blocs/me_bloc/app_state_event.dart'
+    as AppStateEvent;
 import 'package:super_hero_call/blocs/me_bloc/app_state.dart';
 import 'package:super_hero_call/models/super_hero.dart';
-
 import 'hero_avatar.dart';
 import 'hero_list_to_call.dart';
 import 'hero_picker.dart';
 
-class Me extends StatelessWidget {
-  final VoidCallback onFinishCall;
-  final Function(bool) onAcceptOrDecline;
-  const Me({Key key, this.onAcceptOrDecline, this.onFinishCall})
-      : super(key: key);
+class MyStatus extends StatelessWidget {
+  const MyStatus({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +30,7 @@ class Me extends StatelessWidget {
             return HeroPicker(
               heroes: state.heroes,
               onPicked: (hero) {
-                appStateBloc.add(MeEvent.Pick(hero));
+                appStateBloc.add(AppStateEvent.Pick(hero));
               },
             );
 
@@ -45,8 +42,8 @@ class Me extends StatelessWidget {
               hero: state.him,
               amICaller: true,
               onCancelRequest: () {
-                appStateBloc
-                    .add(MeEvent.Connected(state.me, cancelRequest: true));
+                appStateBloc.add(
+                    AppStateEvent.Connected(state.me, cancelRequest: true));
               },
             );
 
@@ -54,7 +51,9 @@ class Me extends StatelessWidget {
             return CallView(
               hero: state.him,
               amICaller: false,
-              onAcceptOrDecline: onAcceptOrDecline,
+              onAcceptOrDecline: (accept) {
+                appStateBloc.add(AppStateEvent.AcceptOrDecline(accept));
+              },
             );
 
           case Status.inCalling:
@@ -81,7 +80,10 @@ class Me extends StatelessWidget {
                   Positioned(
                     bottom: 20,
                     child: CupertinoButton(
-                      onPressed: onFinishCall,
+                      onPressed: () {
+                        //finish the call
+                        appStateBloc.add(AppStateEvent.FinishCall());
+                      },
                       borderRadius: BorderRadius.circular(30),
                       padding:
                           EdgeInsets.symmetric(horizontal: 30, vertical: 10),
