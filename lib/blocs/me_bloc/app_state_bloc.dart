@@ -1,15 +1,23 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:flutter_webrtc/webrtc.dart';
 import 'package:super_hero_call/models/super_hero.dart';
+import 'package:super_hero_call/utils/signaling.dart';
 import 'package:super_hero_call/utils/socket_client.dart';
 import 'app_state_event.dart' as Event;
 import 'app_state.dart';
 
 class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
   SocketClient _socketClient = SocketClient();
+  Signaling _signaling = Signaling();
+
+  final _localRenderer = new RTCVideoRenderer();
+  RTCVideoRenderer get localRenderer => _localRenderer;
 
   AppStateBloc() {
+    print("initialized");
     _initSocketClient();
+    _localRenderer.initialize();
   }
 
   _initSocketClient() {
@@ -18,6 +26,11 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
     _socketClient.onConnected = (heroes) {
       print("connected");
       add(Event.Picker(heroes));
+      _signaling.init();
+    };
+
+    _signaling.onLocalStream = (stream) {
+      _localRenderer.srcObject = stream;
     };
 
     _socketClient.onAssigned = (superHeroName) {
@@ -83,7 +96,9 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
 
   @override
   Future<void> close() {
-    _socketClient?.disconnect();
+    _signaling.dispose();
+    _localRenderer.dispose();
+    _socketClient.disconnect();
     return super.close();
   }
 

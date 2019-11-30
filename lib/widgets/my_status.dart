@@ -10,6 +10,7 @@ import 'package:super_hero_call/models/super_hero.dart';
 import 'hero_avatar.dart';
 import 'hero_list_to_call.dart';
 import 'hero_picker.dart';
+import 'in_calling.dart';
 
 class MyStatus extends StatelessWidget {
   const MyStatus({Key key}) : super(key: key);
@@ -57,43 +58,7 @@ class MyStatus extends StatelessWidget {
             );
 
           case Status.inCalling:
-            return Container(
-              height: double.infinity,
-              width: double.infinity,
-              child: Stack(
-                alignment: Alignment.center,
-                children: <Widget>[
-                  Positioned(
-                    top: 20,
-                    left: 20,
-                    child: Container(
-                      child: Row(
-                        children: <Widget>[
-                          Icon(Icons.donut_large, color: Colors.green),
-                          SizedBox(width: 10),
-                          Text(state.him.name,
-                              style: TextStyle(color: Colors.white))
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    child: CupertinoButton(
-                      onPressed: () {
-                        //finish the call
-                        appStateBloc.add(AppStateEvent.FinishCall());
-                      },
-                      borderRadius: BorderRadius.circular(30),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                      color: Colors.redAccent,
-                      child: Icon(Icons.call_end, size: 40),
-                    ),
-                  )
-                ],
-              ),
-            );
+            return InCalling();
         }
       },
     );

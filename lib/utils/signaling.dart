@@ -8,6 +8,8 @@ class Signaling {
   OnRemoteStream onRemoteStream;
 
   MediaStream _localStream;
+
+  MediaStream get localStream => _localStream;
   RTCPeerConnection _peer;
 
   final Map<String, dynamic> configuration = {
@@ -37,8 +39,8 @@ class Signaling {
       'video': {
         'mandatory': {
           'minWidth':
-              '640', // Provide your own width, height and frame rate here
-          'minHeight': '480',
+              '480', // Provide your own width, height and frame rate here
+          'minHeight': '640',
           'minFrameRate': '30',
         },
         'facingMode': 'user',
