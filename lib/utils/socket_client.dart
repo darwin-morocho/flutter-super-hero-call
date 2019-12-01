@@ -25,8 +25,8 @@ class SocketClient {
   OnCandidate onCandidate;
 
   Future<void> connect() async {
-    const uri = "http://192.168.1.35:5000";
-    // const uri = "https://super-hero-call.herokuapp.com";
+    // const uri = "http://192.168.1.35:5000";
+    const uri = "https://super-hero-call.herokuapp.com";
     _socket = IO.io(uri, <String, dynamic>{
       'transports': ['websocket'],
     });

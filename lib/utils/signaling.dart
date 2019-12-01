@@ -1,4 +1,5 @@
 import 'package:flutter_webrtc/webrtc.dart';
+import 'package:super_hero_call/utils/consts.dart';
 
 typedef OnLocalStream = void Function(MediaStream stream);
 typedef OnRemoteStream = void Function(MediaStream stream);
@@ -16,60 +17,9 @@ class Signaling {
   Map<String, dynamic> _myAnswer;
   Map<String, dynamic> get myAnswer => _myAnswer;
 
-  final Map<String, dynamic> configuration = {
-    "iceServers": [
-      {
-        "urls": [
-          "stun:u1.xirsys.com",
-          "stun:stun1.l.google.com:19302",
-          "stun:numb.viagenie.ca:3478"
-        ]
-      },
-      {
-        "username":
-            "UFsS1Zf40ri07DNlcJr-lA0qp89SgJm_8vrOipNL-iSTWQYxo_bP6CKEWmBxgb68AAAAAF0mPQR5b21hY2E2OQ==",
-        "credential": "49182e20-a349-11e9-af68-f676af1e4042",
-        "urls": [
-          "turn:u1.xirsys.com:80?transport=udp",
-          "turn:u1.xirsys.com:80?transport=tcp",
-          "turns:u1.xirsys.com:443?transport=tcp"
-        ]
-      }
-    ]
-  };
-
-  final Map<String, dynamic> offerSdpConstraints = {
-    "mandatory": {
-      "OfferToReceiveAudio": true,
-      "OfferToReceiveVideo": true,
-    },
-    "optional": [],
-  };
-
-  final Map<String, dynamic> loopbackConstraints = {
-    "mandatory": {},
-    "optional": [
-      {"DtlsSrtpKeyAgreement": true},
-    ],
-  };
-
   init() async {
-    final Map<String, dynamic> mediaConstraints = {
-      'audio': true,
-      'video': {
-        'mandatory': {
-          'minWidth':
-              '480', // Provide your own width, height and frame rate here
-          'minHeight': '640',
-          'minFrameRate': '30',
-        },
-        'facingMode': 'user',
-        'optional': [],
-      }
-    };
-
-    _localStream = await navigator
-        .getUserMedia(mediaConstraints); // get the user media stream
+    _localStream = await navigator.getUserMedia(
+        WebrtcConfig.mediaConstraints); // get the user media stream
 
     if (onLocalStream != null) {
       //send the my stream to home screen
@@ -77,13 +27,16 @@ class Signaling {
     }
   }
 
+  ///
+  /// [isCaller] is true if we are the caller
   Future<RTCPeerConnection> createPeer(bool isCaller) async {
-    final peer = await createPeerConnection(
-        configuration, loopbackConstraints); // create a peer connection
+    final peer = await createPeerConnection(WebrtcConfig.configuration,
+        WebrtcConfig.loopbackConstraints); // create a peer connection
     peer.onAddStream = gotRemoteStream; // when I recived a remote stream
-    peer.addStream(_localStream); //
+    peer.addStream(_localStream); // the audio and video to the other user
 
     if (isCaller) {
+      // if we are the caller
       peer.onIceCandidate = (RTCIceCandidate candidate) {
         if (onIceCandidate != null) {
           onIceCandidate({
@@ -107,26 +60,31 @@ class Signaling {
   offer(dynamic offer) async {
     _peer = await createPeer(false);
 
-    final desc = RTCSessionDescription(offer['sdp'], offer['type']);
+    final desc = RTCSessionDescription(
+        offer['sdp'], offer['type']); //create the offer description
     await _peer.setRemoteDescription(desc); // set the remote description
 
-    final answer = await _peer.createAnswer(offerSdpConstraints);
+    final answer = await _peer.createAnswer(WebrtcConfig.offerSdpConstraints);
     _peer.setLocalDescription(answer); //set local destrintion with my answer
     _myAnswer = {'type': answer.type, 'sdp': answer.sdp};
   }
 
   //when we got an answer from a remote user
   answer(dynamic answer) async {
-    final desc = RTCSessionDescription(answer['sdp'], answer['type']);
+    final desc = RTCSessionDescription(
+        answer['sdp'], answer['type']); // create the offer description
     await _peer.setRemoteDescription(desc); // set the remote description
   }
 
   // when your are the caller
   Future<Map<String, dynamic>> call() async {
-    _peer = await createPeer(true);
-    final offerDesc = await _peer.createOffer(offerSdpConstraints);
+    _peer = await createPeer(true); // create a new peer with us a caller
+    final offerDesc = await _peer.createOffer(WebrtcConfig.offerSdpConstraints);
     _peer.setLocalDescription(offerDesc); //set local destrintion with my offer
-    return {'type': offerDesc.type, 'sdp': offerDesc.sdp};
+    return {
+      'type': offerDesc.type,
+      'sdp': offerDesc.sdp
+    }; // return my offer data
   }
 
   // this method will be called when you revice a remote video/audio stream

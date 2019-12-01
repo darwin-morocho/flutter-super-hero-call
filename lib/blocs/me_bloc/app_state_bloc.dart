@@ -73,14 +73,12 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
       final superHeroName = requestData['superHeroName'];
       final requestId = requestData['requestId'];
       final hero = state.heroes[superHeroName];
-      add(Event.Incomming(requestId, hero));
-      print("flutter: onrequest ${requestData['data']}");
       _signaling.offer(requestData['data']);
+      add(Event.Incomming(requestId, hero));
     };
 
     // when the calleer cancel the request
     _socketClient.onCancelRequest = () {
-      print("flutter: onCancelRequest");
       add(Event.Connected(state.me));
     };
 
@@ -91,9 +89,8 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
         add(Event.Connected(state.me));
         //_showSnackBar("$superHeroName is not available to take your call");
       } else {
-        print("flutter: onresponse ${data}");
+        await _signaling.answer(data);
         add(Event.InCalling());
-        _signaling.answer(data);
       }
     };
 
@@ -103,7 +100,6 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
     };
 
     _socketClient.onCandidate = (candidate) {
-      print("_socketClient.onCandidate");
       _signaling.addCandidate(candidate);
     };
   }
