@@ -54,4 +54,6 @@ class AcceptOrDecline extends AppStateEvent {
 
 class InCalling extends AppStateEvent {}
 
+class Loading extends AppStateEvent {}
+
 class FinishCall extends AppStateEvent {}

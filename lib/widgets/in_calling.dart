@@ -1,4 +1,3 @@
-import 'package:after_layout/after_layout.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,32 +7,10 @@ import 'package:super_hero_call/blocs/me_bloc/app_state_bloc.dart';
 import 'package:super_hero_call/blocs/me_bloc/app_state_event.dart'
     as AppStateEvent;
 
-class InCalling extends StatefulWidget {
-  @override
-  _InCallingState createState() => _InCallingState();
-}
-
-class _InCallingState extends State<InCalling> {
- 
-
-  @override
-  void initState() {
-    super.initState();
-    
-  }
-
-  @override
-  void dispose() {
-   
-    super.dispose();
-  }
-
+class InCalling extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appStateBloc = BlocProvider.of<AppStateBloc>(context);
-    
-
-    
 
     return Container(
       height: double.infinity,
@@ -54,6 +31,9 @@ class _InCallingState extends State<InCalling> {
               ),
             ),
           ),
+          Positioned.fill(
+            child: RTCVideoView(appStateBloc.remoteRenderer),
+          ),
           Positioned(
             bottom: 120,
             left: 20,
@@ -71,7 +51,7 @@ class _InCallingState extends State<InCalling> {
               ),
             ),
           ),
-          Positioned( 
+          Positioned(
             bottom: 20,
             left: 0,
             right: 0,

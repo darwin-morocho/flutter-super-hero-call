@@ -10,6 +10,7 @@ typedef OnRequest = void Function(dynamic data);
 typedef OnCancelRequest = void Function();
 typedef OnDisconnected = void Function(String superHeroName);
 typedef OnFinish = void Function();
+typedef OnCandidate = void Function(dynamic candidate);
 
 class SocketClient {
   IO.Socket _socket;
@@ -21,6 +22,7 @@ class SocketClient {
   OnCancelRequest onCancelRequest;
   OnDisconnected onDisconnected;
   OnFinish onFinish;
+  OnCandidate onCandidate;
 
   Future<void> connect() async {
     const uri = "http://192.168.1.35:5000";
@@ -90,6 +92,12 @@ class SocketClient {
         onFinish();
       }
     });
+
+    _socket.on('on-candidate', (candidate) {
+      if (onCandidate != null) {
+        onCandidate(candidate);
+      }
+    });
   }
 
   void pickSuperHero(String superHeroName) {
@@ -109,7 +117,13 @@ class SocketClient {
   }
 
   void acceptOrDeclineCall(String requestId, dynamic data) {
+    print("flutter: acceptOrDeclineCall $data");
     _socket?.emit('response', {"requestId": requestId, "data": data});
+  }
+
+  void sendCandidate(String requestId, dynamic candidate) {
+    _socket
+        ?.emit('candidate', {'requestId': requestId, 'candidate': candidate});
   }
 
   disconnect() async {

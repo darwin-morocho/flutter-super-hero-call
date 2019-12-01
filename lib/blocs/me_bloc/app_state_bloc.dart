@@ -12,12 +12,16 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
   Signaling _signaling = Signaling();
 
   final _localRenderer = new RTCVideoRenderer();
+  final _remoteRenderer = new RTCVideoRenderer();
   RTCVideoRenderer get localRenderer => _localRenderer;
+  RTCVideoRenderer get remoteRenderer => _remoteRenderer;
 
   AppStateBloc() {
     print("initialized");
     _initSocketClient();
+
     _localRenderer.initialize();
+    _remoteRenderer.initialize();
   }
 
   _initSocketClient() {
@@ -25,12 +29,22 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
     _socketClient.connect();
     _socketClient.onConnected = (heroes) {
       print("connected");
-      add(Event.Picker(heroes));
+
       _signaling.init();
+
+      add(Event.Picker(heroes));
     };
 
     _signaling.onLocalStream = (stream) {
       _localRenderer.srcObject = stream;
+    };
+
+    _signaling.onRemoteStream = (stream) {
+      _remoteRenderer.srcObject = stream;
+    };
+
+    _signaling.onIceCandidate = (iceCandidate) {
+      _socketClient.sendCandidate(state.requestId, iceCandidate);
     };
 
     _socketClient.onAssigned = (superHeroName) {
@@ -60,29 +74,37 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
       final requestId = requestData['requestId'];
       final hero = state.heroes[superHeroName];
       add(Event.Incomming(requestId, hero));
-      //_signaling.gotOffer(requestData['data']);
+      print("flutter: onrequest ${requestData['data']}");
+      _signaling.offer(requestData['data']);
     };
 
     // when the calleer cancel the request
     _socketClient.onCancelRequest = () {
-      print("onCancelRequest");
+      print("flutter: onCancelRequest");
       add(Event.Connected(state.me));
     };
 
     // if the call that I made was taken or not
-    _socketClient.onResponse = (superHeroName, data) {
+    _socketClient.onResponse = (superHeroName, data) async {
       if (data == null) {
         // the call was not taken
         add(Event.Connected(state.me));
         //_showSnackBar("$superHeroName is not available to take your call");
       } else {
+        print("flutter: onresponse ${data}");
         add(Event.InCalling());
+        _signaling.answer(data);
       }
     };
 
     // whe the other user finish the call
     _socketClient.onFinish = () {
       add(Event.Connected(state.me));
+    };
+
+    _socketClient.onCandidate = (candidate) {
+      print("_socketClient.onCandidate");
+      _signaling.addCandidate(candidate);
     };
   }
 
@@ -96,8 +118,9 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
 
   @override
   Future<void> close() {
-    _signaling.dispose();
+    _signaling?.dispose();
     _localRenderer.dispose();
+    _remoteRenderer.dispose();
     _socketClient.disconnect();
     return super.close();
   }
@@ -106,7 +129,9 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
   Stream<AppState> mapEventToState(
     Event.AppStateEvent event,
   ) async* {
-    if (event is Event.Picker) {
+    if (event is Event.Loading) {
+      yield state.copyWith(status: Status.loading);
+    } else if (event is Event.Picker) {
       yield state.copyWith(status: Status.picking, heroes: event.heroes);
     } else if (event is Event.Pick) {
       _socketClient.pickSuperHero(event.hero.name);
@@ -119,8 +144,9 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
       }
       yield* getConnected(event.hero);
     } else if (event is Event.Calling) {
-      //final data = await _signaling.sendMyOffer(); // get the offer data
-      _socketClient.callTo(event.hero.name, 'data');
+      final myOffer = await _signaling.call(); // get the offer data
+      print("myOffer: ${myOffer.toString()}");
+      _socketClient.callTo(event.hero.name, myOffer);
       yield state.copyWith(status: Status.calling, him: event.hero);
     } else if (event is Event.Incomming) {
       yield state.copyWith(
@@ -130,9 +156,9 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
     } else if (event is Event.AcceptOrDecline) {
       //when you accept or decline one incomming call
       if (event.accept) {
-        //final data = await _signaling.sendMyAnswer();
-        _socketClient.acceptOrDeclineCall(state.requestId, 'data');
-        add(Event.InCalling());
+        final myAnswer = _signaling.myAnswer;
+        _socketClient.acceptOrDeclineCall(state.requestId, myAnswer);
+        yield state.copyWith(status: Status.inCalling);
       } else {
         _socketClient.acceptOrDeclineCall(state.requestId, null);
         add(Event.Connected(state.me, cancelRequest: false));
@@ -141,6 +167,7 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
       yield state.copyWith(status: Status.inCalling);
     } else if (event is Event.FinishCall) {
       _socketClient.finishCall();
+      _remoteRenderer.srcObject = null;
       yield* getConnected(state.me);
     }
   }

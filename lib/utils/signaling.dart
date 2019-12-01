@@ -2,19 +2,39 @@ import 'package:flutter_webrtc/webrtc.dart';
 
 typedef OnLocalStream = void Function(MediaStream stream);
 typedef OnRemoteStream = void Function(MediaStream stream);
+typedef OnIceCandidate = void Function(dynamic iceCandidate);
 
 class Signaling {
   OnLocalStream onLocalStream;
   OnRemoteStream onRemoteStream;
+  OnIceCandidate onIceCandidate;
 
   MediaStream _localStream;
 
-  MediaStream get localStream => _localStream;
   RTCPeerConnection _peer;
+
+  Map<String, dynamic> _myAnswer;
+  Map<String, dynamic> get myAnswer => _myAnswer;
 
   final Map<String, dynamic> configuration = {
     "iceServers": [
-      {"url": "stun:stun.l.google.com:19302"},
+      {
+        "urls": [
+          "stun:u1.xirsys.com",
+          "stun:stun1.l.google.com:19302",
+          "stun:numb.viagenie.ca:3478"
+        ]
+      },
+      {
+        "username":
+            "UFsS1Zf40ri07DNlcJr-lA0qp89SgJm_8vrOipNL-iSTWQYxo_bP6CKEWmBxgb68AAAAAF0mPQR5b21hY2E2OQ==",
+        "credential": "49182e20-a349-11e9-af68-f676af1e4042",
+        "urls": [
+          "turn:u1.xirsys.com:80?transport=udp",
+          "turn:u1.xirsys.com:80?transport=tcp",
+          "turns:u1.xirsys.com:443?transport=tcp"
+        ]
+      }
     ]
   };
 
@@ -55,36 +75,63 @@ class Signaling {
       //send the my stream to home screen
       onLocalStream(_localStream);
     }
-
-    _peer = await createPeerConnection(
-        configuration, loopbackConstraints); // create a perr connection
-    _peer.addStream(_localStream); //
-
-    _peer.onAddStream = gotRemoteStream; // when I recived a remote stream
   }
 
-  // when your are receiving a call
-  gotOffer(dynamic data) {
-    final incommingOffer = RTCSessionDescription(data['sdp'], data['type']);
-    _peer.setRemoteDescription(incommingOffer); // set the remote description
+  Future<RTCPeerConnection> createPeer(bool isCaller) async {
+    final peer = await createPeerConnection(
+        configuration, loopbackConstraints); // create a peer connection
+    peer.onAddStream = gotRemoteStream; // when I recived a remote stream
+    peer.addStream(_localStream); //
+
+    if (isCaller) {
+      peer.onIceCandidate = (RTCIceCandidate candidate) {
+        if (onIceCandidate != null) {
+          onIceCandidate({
+            'sdpMLineIndex': candidate.sdpMlineIndex,
+            'sdpMid': candidate.sdpMid,
+            'candidate': candidate.candidate,
+          });
+        }
+      };
+    }
+    return peer;
+  }
+
+  addCandidate(dynamic data) {
+    RTCIceCandidate candidate = new RTCIceCandidate(
+        data['candidate'], data['sdpMid'], data['sdpMLineIndex']);
+    _peer.addCandidate(candidate);
+  }
+
+  //when somebody sends us an offer
+  offer(dynamic offer) async {
+    _peer = await createPeer(false);
+
+    final desc = RTCSessionDescription(offer['sdp'], offer['type']);
+    await _peer.setRemoteDescription(desc); // set the remote description
+
+    final answer = await _peer.createAnswer(offerSdpConstraints);
+    _peer.setLocalDescription(answer); //set local destrintion with my answer
+    _myAnswer = {'type': answer.type, 'sdp': answer.sdp};
+  }
+
+  //when we got an answer from a remote user
+  answer(dynamic answer) async {
+    final desc = RTCSessionDescription(answer['sdp'], answer['type']);
+    await _peer.setRemoteDescription(desc); // set the remote description
   }
 
   // when your are the caller
-  Future<Map<String, dynamic>> sendMyOffer() async {
-    final offer = await _peer.createOffer(offerSdpConstraints);
-    _peer.setLocalDescription(offer); //set local destrintion with my offer
-    return {'type': offer.type, 'sdp': offer.sdp};
-  }
-
-  // when your are the callee
-  Future<Map<String, dynamic>> sendMyAnswer() async {
-    final answer = await _peer.createAnswer(offerSdpConstraints);
-    _peer.setLocalDescription(answer); //set local destrintion with my answer
-    return {'type': answer.type, 'sdp': answer.sdp};
+  Future<Map<String, dynamic>> call() async {
+    _peer = await createPeer(true);
+    final offerDesc = await _peer.createOffer(offerSdpConstraints);
+    _peer.setLocalDescription(offerDesc); //set local destrintion with my offer
+    return {'type': offerDesc.type, 'sdp': offerDesc.sdp};
   }
 
   // this method will be called when you revice a remote video/audio stream
   gotRemoteStream(MediaStream remoteStream) {
+    print("gotRemoteStream");
     //send the remote stream to home screen
     if (onRemoteStream != null) {
       onRemoteStream(remoteStream);
@@ -93,6 +140,6 @@ class Signaling {
 
   dispose() {
     _peer?.close();
-    _localStream?.dispose();
+    //_localStream?.dispose();
   }
 }
