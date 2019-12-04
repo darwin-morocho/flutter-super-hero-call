@@ -16,9 +16,21 @@ class WebrtcConfig {
     "iceServers": [
       {
         "urls": [
+          "stun:u1.xirsys.com",
           "stun:stun1.l.google.com:19302",
+          "stun:numb.viagenie.ca:3478"
         ]
       },
+      {
+        "username":
+            "UFsS1Zf40ri07DNlcJr-lA0qp89SgJm_8vrOipNL-iSTWQYxo_bP6CKEWmBxgb68AAAAAF0mPQR5b21hY2E2OQ==",
+        "credential": "49182e20-a349-11e9-af68-f676af1e4042",
+        "urls": [
+          "turn:u1.xirsys.com:80?transport=udp",
+          "turn:u1.xirsys.com:80?transport=tcp",
+          "turns:u1.xirsys.com:443?transport=tcp"
+        ]  
+      } 
     ]
   };
 
