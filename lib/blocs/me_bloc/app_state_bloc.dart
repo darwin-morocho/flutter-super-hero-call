@@ -4,7 +4,6 @@ import 'package:flutter_incall_manager/incall.dart';
 import 'package:flutter_webrtc/webrtc.dart';
 import 'package:super_hero_call/models/super_hero.dart';
 import 'package:super_hero_call/utils/signaling.dart';
-
 import 'app_state_event.dart' as Event;
 import 'app_state.dart';
 

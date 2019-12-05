@@ -34,33 +34,34 @@ class InCalling extends StatelessWidget {
           Positioned.fill(
             child: Transform.scale(
               alignment: Alignment.center,
-              scale: 1.5,
+              scale: 1.6,
               child: RTCVideoView(appStateBloc.remoteRenderer),
             ),
           ),
           Positioned(
-            bottom: 120,
-            left: 20,
-            child: Transform.scale(
-              scale: 0.3,
-              alignment: Alignment.bottomLeft,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  width: 480,
-                  height: 640,
-                  color: Color(0xfff0f0f0),
-                  child: RTCVideoView(appStateBloc.localRenderer),
+              bottom: 120,
+              left: 20,
+              child: SafeArea(
+                child: Transform.scale(
+                  scale: 0.3,
+                  alignment: Alignment.bottomLeft,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      width: 480,
+                      height: 640,
+                      color: Color(0xfff0f0f0),
+                      child: RTCVideoView(appStateBloc.localRenderer),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
+              )),
           Positioned(
             bottom: 20,
             left: 0,
             right: 0,
             child: SafeArea(
-                          child: Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   FloatingActionButton(

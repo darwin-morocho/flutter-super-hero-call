@@ -117,7 +117,9 @@ class Signaling {
     });
 
     _socket.on('on-candidate', (candidate) {
-      _addCandidate(candidate);
+      if (_peer != null) {
+        _addCandidate(candidate);
+      }
     });
   }
 
@@ -148,7 +150,7 @@ class Signaling {
     print("add cantidate $data");
     RTCIceCandidate candidate = new RTCIceCandidate(
         data['candidate'], data['sdpMid'], data['sdpMLineIndex']);
-    await _peer.addCandidate(candidate);
+    await _peer?.addCandidate(candidate);
   }
 
   void acceptOrDeclineCall(String requestId, bool accept) async {
@@ -197,6 +199,7 @@ class Signaling {
     _him = null;
     if (_remoteStream != null) {
       _peer.close();
+      _peer = null;
     }
   }
 
