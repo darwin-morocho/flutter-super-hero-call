@@ -2,52 +2,49 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:super_hero_call/blocs/me_bloc/me_bloc.dart';
-import 'package:super_hero_call/blocs/me_bloc/me_event.dart' as MeEvent;
-import 'package:super_hero_call/blocs/me_bloc/me_state.dart';
+import 'package:super_hero_call/blocs/me_bloc/app_state_bloc.dart';
+import 'package:super_hero_call/blocs/me_bloc/app_state_event.dart'
+    as AppStateEvent;
+import 'package:super_hero_call/blocs/me_bloc/app_state.dart';
 import 'package:super_hero_call/models/super_hero.dart';
-
 import 'hero_avatar.dart';
 import 'hero_list_to_call.dart';
+import 'hero_picker.dart';
+import 'in_calling.dart';
 
-class Me extends StatelessWidget {
-  final Widget pickHero;
-  final VoidCallback onFinishCall;
-  final Function(bool) onAcceptOrDecline;
-  const Me(
-      {Key key,
-      @required this.pickHero,
-      this.onAcceptOrDecline,
-      this.onFinishCall})
-      : super(key: key);
+class MyStatus extends StatelessWidget {
+  const MyStatus({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final meBloc = BlocProvider.of<MeBloc>(context);
+    final appStateBloc = BlocProvider.of<AppStateBloc>(context);
 
-    return BlocBuilder<MeBloc, MeState>(
+    return BlocBuilder<AppStateBloc, AppState>(
       builder: (_, state) {
-        print("me stattus ${state.status}");
         switch (state.status) {
-          case Status.connecting:
+          case Status.loading:
             return Center(
                 child: CupertinoActivityIndicator(
               radius: 15,
             ));
           case Status.picking:
-            return pickHero;
+            return HeroPicker(
+              heroes: state.heroes,
+              onPicked: (hero) {
+                appStateBloc.add(AppStateEvent.Pick(hero));
+              },
+            );
 
           case Status.connected:
-            return HeroListToCall(
-              meState: state,
-            );
+            return HeroListToCall();
 
           case Status.calling:
             return CallView(
               hero: state.him,
               amICaller: true,
               onCancelRequest: () {
-                meBloc.add(MeEvent.Connected(state.me, cancelRequest: true));
+                appStateBloc.add(
+                    AppStateEvent.Connected(state.me, cancelRequest: true));
               },
             );
 
@@ -55,44 +52,13 @@ class Me extends StatelessWidget {
             return CallView(
               hero: state.him,
               amICaller: false,
-              onAcceptOrDecline: onAcceptOrDecline,
+              onAcceptOrDecline: (accept) {
+                appStateBloc.add(AppStateEvent.AcceptOrDecline(accept));
+              },
             );
 
           case Status.inCalling:
-            return Container(
-              height: double.infinity,
-              width: double.infinity,
-              child: Stack(
-                alignment: Alignment.center,
-                children: <Widget>[
-                  Positioned(
-                    top: 20,
-                    left: 20,
-                    child: Container(
-                      child: Row(
-                        children: <Widget>[
-                          Icon(Icons.donut_large, color: Colors.green),
-                          SizedBox(width: 10),
-                          Text(state.him.name,
-                              style: TextStyle(color: Colors.white))
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    child: CupertinoButton(
-                      onPressed: onFinishCall,
-                      borderRadius: BorderRadius.circular(30),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                      color: Colors.redAccent,
-                      child: Icon(Icons.call_end, size: 40),
-                    ),
-                  )
-                ],
-              ),
-            );
+            return InCalling();
         }
       },
     );

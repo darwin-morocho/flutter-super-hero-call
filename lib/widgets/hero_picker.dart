@@ -5,7 +5,7 @@ import 'package:super_hero_call/models/super_hero.dart';
 
 class HeroPicker extends StatelessWidget {
   final Map<String, SuperHero> heroes;
-  final Function(String heroName) onPicked;
+  final Function(SuperHero heroPicked) onPicked;
   const HeroPicker({Key key, @required this.heroes, this.onPicked})
       : super(key: key);
 
@@ -24,7 +24,7 @@ class HeroPicker extends StatelessWidget {
               fontWeight: FontWeight.bold),
         ),
         Text(
-          "Choose one to enter to Super Hero Chat",
+          "Choose one to enter the Super Hero Chat",
           style: TextStyle(
               fontSize: 15,
               color: Colors.white,
@@ -46,7 +46,7 @@ class HeroPicker extends StatelessWidget {
                   child: CupertinoButton(
                     onPressed: () {
                       if (superHero.isTaken == false) {
-                        onPicked(superHero.name);
+                        onPicked(superHero);
                       }
                     },
                     padding: const EdgeInsets.all(8.0),

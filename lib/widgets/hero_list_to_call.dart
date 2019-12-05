@@ -1,24 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:super_hero_call/blocs/me_bloc/me_bloc.dart';
-import 'package:super_hero_call/blocs/me_bloc/me_event.dart' as MeEvent;
-import 'package:super_hero_call/blocs/me_bloc/me_state.dart';
-import 'package:super_hero_call/blocs/superheroes_bloc/bloc.dart';
+import 'package:super_hero_call/blocs/me_bloc/app_state_bloc.dart';
+import 'package:super_hero_call/blocs/me_bloc/app_state_event.dart' as MeEvent;
+import 'package:super_hero_call/blocs/me_bloc/app_state.dart';
 import 'package:super_hero_call/models/super_hero.dart';
 
 import 'hero_avatar.dart';
 
 class HeroListToCall extends StatelessWidget {
-  final MeState meState;
-
-  const HeroListToCall({Key key, @required this.meState})
-      : assert(meState != null),
-        super(key: key);
-
   @override
   Widget build(BuildContext context) {
-    final meBloc = BlocProvider.of<MeBloc>(context);
+    final appStateBloc = BlocProvider.of<AppStateBloc>(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -28,19 +21,19 @@ class HeroListToCall extends StatelessWidget {
         children: <Widget>[
           Column(
             children: <Widget>[
-              HeroAvatar(imageUrl: meState.me.avatar),
+              HeroAvatar(imageUrl: appStateBloc.state.me.avatar),
               SizedBox(height: 10),
               Text(
-                meState.me.name,
+                appStateBloc.state.me.name,
                 style: TextStyle(color: Colors.white),
               ),
             ],
           ),
-          BlocBuilder<SuperheroesBloc, SuperheroesState>(
-            builder: (_, superHeroresState) {
+          BlocBuilder<AppStateBloc, AppState>(
+            builder: (_, state) {
               return Column(
-                children: superHeroresState.heroes.values
-                    .where((hero) => hero.name != meState.me.name)
+                children: state.heroes.values
+                    .where((hero) => hero.name != appStateBloc.state.me.name)
                     .map((SuperHero item) => AbsorbPointer(
                           absorbing: item.isTaken == false,
                           child: Opacity(
@@ -72,7 +65,7 @@ class HeroListToCall extends StatelessWidget {
                                   FloatingActionButton(
                                     heroTag: item.name,
                                     onPressed: () {
-                                      meBloc.add(MeEvent.Calling(item));
+                                      appStateBloc.add(MeEvent.Calling(item));
                                     },
                                     child: Icon(Icons.call),
                                     mini: true,
