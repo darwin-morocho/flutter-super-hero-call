@@ -61,28 +61,48 @@ class InCalling extends StatelessWidget {
             left: 0,
             right: 0,
             child: SafeArea(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  FloatingActionButton(
-                    onPressed: () {},
-                    child: Icon(Icons.mic, size: 35),
-                  ),
-                  CupertinoButton(
-                    onPressed: () {
-                      //finish the call
-                      appStateBloc.add(AppStateEvent.FinishCall());
-                    },
-                    borderRadius: BorderRadius.circular(30),
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                    color: Colors.redAccent,
-                    child: Icon(Icons.call_end, size: 40),
-                  ),
-                  FloatingActionButton(
-                    onPressed: () {},
-                    child: Icon(Icons.camera_front, size: 35),
-                  ),
-                ],
+              child: BlocBuilder<AppStateBloc, AppState>(
+                builder: (_, state) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      FloatingActionButton(
+                        backgroundColor: state.microphoneEnabled
+                            ? Colors.blue.withOpacity(0.6)
+                            : Colors.black12,
+                        onPressed: () {
+                          appStateBloc
+                              .add(AppStateEvent.EnableDisableMicrophone());
+                        },
+                        child: Icon(
+                            state.microphoneEnabled ? Icons.mic : Icons.mic_off,
+                            size: 35),
+                      ),
+                      CupertinoButton(
+                        onPressed: () {
+                          //finish the call
+                          appStateBloc.add(AppStateEvent.FinishCall());
+                        },
+                        borderRadius: BorderRadius.circular(30),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                        color: Colors.redAccent,
+                        child: Icon(Icons.call_end, size: 40),
+                      ),
+                      FloatingActionButton(
+                        onPressed: () {
+                          appStateBloc.add(AppStateEvent.SwitchCamera());
+                        },
+                        backgroundColor: Colors.blue.withOpacity(0.6),
+                        child: Icon(
+                            state.usefrontCamera
+                                ? Icons.camera_front
+                                : Icons.camera_rear,
+                            size: 35),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           )

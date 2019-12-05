@@ -14,7 +14,8 @@ typedef OnCancelRequest = void Function();
 typedef OnDisconnected = void Function(String superHeroName);
 typedef OnFinish = void Function();
 
-typedef OnRemoteStream = void Function(MediaStream local, MediaStream remote);
+typedef OnLocalStream = void Function(MediaStream stream);
+typedef OnRemoteStream = void Function(MediaStream stream);
 
 class Signaling {
   IO.Socket _socket;
@@ -27,17 +28,15 @@ class Signaling {
   OnCancelRequest onCancelRequest;
   OnDisconnected onDisconnected;
   OnFinish onFinish;
-
+  OnLocalStream onLocalStream;
   OnRemoteStream onRemoteStream;
-
   MediaStream _localStream, _remoteStream;
-
   RTCPeerConnection _peer;
-
   String _him;
   RTCSessionDescription _incommingOffer;
-
   RTCSessionDescription _myAnswer;
+
+  bool _isFrontCamera = true;
 
   Future<void> _connect() async {
     // const uri = "http://192.168.1.35:5000";
@@ -126,16 +125,22 @@ class Signaling {
   init() async {
     _localStream = await navigator.getUserMedia(
         WebrtcConfig.mediaConstraints); // get the user media stream
+    if (onLocalStream != null) {
+      onLocalStream(_localStream);
+    }
     _connect();
   }
 
+  // create a new peer connection
   Future<RTCPeerConnection> createPeer() async {
     final peer = await createPeerConnection(WebrtcConfig.configuration,
         WebrtcConfig.loopbackConstraints); // create a peer connection
     peer.onAddStream = gotRemoteStream; // when I recived a remote stream
-    peer.addStream(_localStream); // the audio and video to the other user
+    peer.addStream(
+        _localStream); // the audio and video that will be recived fot the other user in the call
 
     peer.onIceCandidate = (RTCIceCandidate candidate) {
+      // if the connection was successful with the other user
       if (candidate != null && _him != null) {
         print("enviando candidate");
         // send the ICE candidate to the other user into the call
@@ -146,13 +151,14 @@ class Signaling {
     return peer;
   }
 
+  // add the remote ICE Candidate
   _addCandidate(dynamic data) async {
-    print("add cantidate $data");
     RTCIceCandidate candidate = new RTCIceCandidate(
         data['candidate'], data['sdpMid'], data['sdpMLineIndex']);
     await _peer?.addCandidate(candidate);
   }
 
+  // acept or decline one incomming call
   void acceptOrDeclineCall(String requestId, bool accept) async {
     if (accept) {
       _peer = await createPeer();
@@ -171,10 +177,11 @@ class Signaling {
     //send the remote stream to home screen
     if (onRemoteStream != null) {
       _remoteStream = remoteStream;
-      onRemoteStream(_localStream, remoteStream);
+      onRemoteStream(remoteStream);
     }
   }
 
+  // send your super hero picked
   void pickSuperHero(String superHeroName) {
     _socket?.emit('pick', superHeroName);
   }
@@ -190,29 +197,50 @@ class Signaling {
         ?.emit('request', {"superHeroName": heroName, "offer": offer.toMap()});
   }
 
+  // if you are calling and you want cancel the request
   void cancelCall() {
     _him = null;
     _socket?.emit('cancel-request');
   }
 
+  microphoneEnabled(bool enabled) {
+    _localStream?.getAudioTracks()[0].setMicrophoneMute(!enabled);
+  }
+
+  // switch front/back camera
+  Future<void> switchCamera() async {
+    _isFrontCamera = !_isFrontCamera;
+    await _localStream?.getVideoTracks()[0].switchCamera();
+  }
+
+  //when the call has been finished whe need close the current peer connection
   _finish() {
     _him = null;
     if (_remoteStream != null) {
-      _peer.close();
+      microphoneEnabled(true);
+      if (!_isFrontCamera) {
+        switchCamera();
+      }
+      _remoteStream?.dispose();
+      _peer?.close();
       _peer = null;
     }
   }
 
+  // notifi to the other user the finish of the call
   void finishCall() {
     _finish();
     _socket?.emit('finish-call');
   }
 
+  //
   dispose() {
     _peer?.close();
     if (_socket != null) {
       _socket.disconnect();
       _socket.close();
+      _localStream?.dispose();
+      _remoteStream?.dispose();
       _socket = null;
     }
     //_localStream?.dispose();

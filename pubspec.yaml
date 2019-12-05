@@ -31,7 +31,8 @@ dependencies:
   flutter_spinkit: ^4.0.0
   after_layout: ^1.0.7+2
   flutter_svg: ^0.15.0
-  flutter_webrtc: ^0.1.7
+  flutter_webrtc:
+    git: https://github.com/cloudwebrtc/flutter-webrtc.git
   flutter_incall_manager:
     git: https://github.com/GioviQ/flutter-incall-manager.git
     

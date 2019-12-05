@@ -18,12 +18,13 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
 
   AppStateBloc() {
     _initSocketClient();
-    _localRenderer.initialize();
-    _remoteRenderer.initialize();
   }
 
-  _initSocketClient() {
+  _initSocketClient() async {
     print("connecting to ws");
+
+    await _localRenderer.initialize();
+    await _remoteRenderer.initialize();
 
     _signaling.init();
     _signaling.onConnected = (heroes) {
@@ -36,12 +37,14 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
       add(Event.Picker(heroes));
     };
 
-    _signaling.onRemoteStream = (localStream, remoteStream) {
+    _signaling.onLocalStream = (MediaStream stream) {
+      _localRenderer.srcObject = stream;
+      _localRenderer.mirror = true;
+    };
+
+    _signaling.onRemoteStream = (MediaStream remoteStream) {
       _incall.stopRingback();
       _incall.stopRingtone();
-
-      _localRenderer.srcObject = localStream;
-      _localRenderer.mirror = true;
 
       _remoteRenderer.srcObject = remoteStream;
       _remoteRenderer.mirror = true;
@@ -102,7 +105,6 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
 
     // whe the other user finish the call
     _signaling.onFinish = () {
-      _localRenderer.srcObject = null;
       _remoteRenderer.srcObject = null;
       add(Event.Connected(state.me));
     };
@@ -168,6 +170,15 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
       _signaling.finishCall();
       _remoteRenderer.srcObject = null;
       yield* getConnected(state.me);
+    } else if (event is Event.SwitchCamera) {
+      await _signaling.switchCamera();
+      yield state.copyWith(
+          status: Status.inCalling, usefrontCamera: !state.usefrontCamera);
+    } else if (event is Event.EnableDisableMicrophone) {
+      final enabled = !state.microphoneEnabled;
+      _signaling.microphoneEnabled(enabled);
+      yield state.copyWith(
+          status: Status.inCalling, microphoneEnabled: enabled);
     }
   }
 
@@ -177,6 +188,8 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
         heroes: state.heroes,
         him: null,
         me: hero,
+        microphoneEnabled: true,
+        usefrontCamera: true,
         requestId: null);
   }
 }

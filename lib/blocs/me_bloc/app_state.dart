@@ -9,12 +9,20 @@ class AppState extends Equatable {
   final String requestId;
   final SuperHero me, him;
   final Map<String, SuperHero> heroes;
+  final bool usefrontCamera, microphoneEnabled;
 
   AppState(
-      {@required this.status, this.requestId, this.me, this.him, this.heroes});
+      {@required this.status,
+      this.requestId,
+      this.me,
+      this.him,
+      this.heroes,
+      this.usefrontCamera = true,
+      this.microphoneEnabled = true});
 
   @override
-  List<Object> get props => [status, requestId, me, him, heroes];
+  List<Object> get props =>
+      [status, requestId, me, him, heroes, usefrontCamera, microphoneEnabled];
 
   factory AppState.initialState() => AppState(status: Status.loading);
 
@@ -23,13 +31,17 @@ class AppState extends Equatable {
       String requestId,
       SuperHero me,
       Map<String, SuperHero> heroes,
-      SuperHero him}) {
+      SuperHero him,
+      bool usefrontCamera,
+      bool microphoneEnabled}) {
     return AppState(
         status: status,
         requestId: requestId ?? this.requestId,
         me: me ?? this.me,
         heroes: heroes ?? this.heroes,
-        him: him ?? this.him);
+        him: him ?? this.him,
+        usefrontCamera: usefrontCamera ?? this.usefrontCamera,
+        microphoneEnabled: microphoneEnabled ?? this.microphoneEnabled);
   }
 
   updateHero(bool isTaken, String heroName) {
@@ -37,11 +49,6 @@ class AppState extends Equatable {
     tmp.addAll(heroes);
     tmp[heroName] = tmp[heroName].copyWith(isTaken: isTaken);
 
-    return AppState(
-        status: status,
-        requestId: this.requestId,
-        me: this.me,
-        him: this.him,
-        heroes: tmp);
+    return copyWith(status: this.status, heroes: tmp);
   }
 }

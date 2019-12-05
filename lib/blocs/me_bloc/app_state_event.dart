@@ -57,3 +57,9 @@ class InCalling extends AppStateEvent {}
 class Loading extends AppStateEvent {}
 
 class FinishCall extends AppStateEvent {}
+
+class SwitchCamera extends AppStateEvent {
+}
+
+class EnableDisableMicrophone extends AppStateEvent {
+}
