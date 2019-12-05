@@ -1,5 +1,7 @@
 PODS:
   - Flutter (1.0.0)
+  - flutter_incall_manager (0.0.1):
+    - Flutter
   - flutter_webrtc (0.1.6):
     - Flutter
     - GoogleWebRTC (= 1.1.27299)
@@ -19,6 +21,7 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `.symlinks/flutter/ios`)
+  - flutter_incall_manager (from `.symlinks/plugins/flutter_incall_manager/ios`)
   - flutter_webrtc (from `.symlinks/plugins/flutter_webrtc/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
@@ -33,6 +36,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: ".symlinks/flutter/ios"
+  flutter_incall_manager:
+    :path: ".symlinks/plugins/flutter_incall_manager/ios"
   flutter_webrtc:
     :path: ".symlinks/plugins/flutter_webrtc/ios"
   path_provider:
@@ -44,6 +49,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  flutter_incall_manager: 1a6aea8d37fb46d63aaa30ac7ea225e121704eab
   flutter_webrtc: b4d969a556b246378adb24262375b0204e1e89df
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
   GoogleWebRTC: 893a5f2f3635437ec3b05ef240993d5713307804

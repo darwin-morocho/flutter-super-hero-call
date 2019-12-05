@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:flutter_incall_manager/incall.dart';
 import 'package:flutter_webrtc/webrtc.dart';
 import 'package:super_hero_call/models/super_hero.dart';
 import 'package:super_hero_call/utils/signaling.dart';
+
 import 'app_state_event.dart' as Event;
 import 'app_state.dart';
 
 class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
   Signaling _signaling = Signaling();
+  IncallManager _incall;
 
   final _localRenderer = new RTCVideoRenderer();
   final _remoteRenderer = new RTCVideoRenderer();
@@ -15,30 +18,36 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
   RTCVideoRenderer get remoteRenderer => _remoteRenderer;
 
   AppStateBloc() {
-    print("initialized");
     _initSocketClient();
-
     _localRenderer.initialize();
     _remoteRenderer.initialize();
   }
 
   _initSocketClient() {
     print("connecting to ws");
-    _signaling.connect();
+
+    _signaling.init();
     _signaling.onConnected = (heroes) {
+      if (_incall == null) {
+        _incall = IncallManager();
+        _incall.start();
+      }
+
       print("connected");
-      _signaling.getUserMedia();
       add(Event.Picker(heroes));
     };
 
-    _signaling.onLocalStream = (stream) {
-      _localRenderer.srcObject = stream;
-      _localRenderer.mirror = true;
-    };
+    _signaling.onRemoteStream = (localStream, remoteStream) {
+      _incall.stopRingback();
+      _incall.stopRingtone();
 
-    _signaling.onRemoteStream = (stream) {
-      _remoteRenderer.srcObject = stream;
+      _localRenderer.srcObject = localStream;
+      _localRenderer.mirror = true;
+
+      _remoteRenderer.srcObject = remoteStream;
       _remoteRenderer.mirror = true;
+
+      _incall.setForceSpeakerphoneOn(flag: ForceSpeakerType.FORCE_ON);
     };
 
     _signaling.onAssigned = (superHeroName) {
@@ -59,6 +68,8 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
     // when a superhero was taken
     _signaling.onDisconnected = (superHeroName) {
       print("disconnected $superHeroName");
+      _localRenderer.srcObject = null;
+      _remoteRenderer.srcObject = null;
       add(Event.UpdateHero(false, superHeroName));
     };
 
@@ -67,11 +78,15 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
       final superHeroName = requestData['superHeroName'];
       final requestId = requestData['requestId'];
       final hero = state.heroes[superHeroName];
+      _incall.startRingback();
+      _incall.startRingtone('DEFAULT', 'default', 10);
       add(Event.Incomming(requestId, hero));
     };
 
     // when the calleer cancel the request
     _signaling.onCancelRequest = () {
+      _incall.stopRingback();
+      _incall.stopRingtone();
       add(Event.Connected(state.me));
     };
 
@@ -88,6 +103,8 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
 
     // whe the other user finish the call
     _signaling.onFinish = () {
+      _localRenderer.srcObject = null;
+      _remoteRenderer.srcObject = null;
       add(Event.Connected(state.me));
     };
   }
@@ -102,6 +119,7 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
 
   @override
   Future<void> close() {
+    _incall?.stop();
     _signaling?.dispose();
     _localRenderer.dispose();
     _remoteRenderer.dispose();
@@ -137,7 +155,8 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
           requestId: event.requestId);
     } else if (event is Event.AcceptOrDecline) {
       _signaling.acceptOrDeclineCall(state.requestId, event.accept);
-
+      _incall.stopRingback();
+      _incall.stopRingtone();
       //when you accept or decline one incomming call
       if (event.accept) {
         yield state.copyWith(status: Status.inCalling);

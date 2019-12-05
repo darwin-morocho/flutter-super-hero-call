@@ -14,8 +14,7 @@ typedef OnCancelRequest = void Function();
 typedef OnDisconnected = void Function(String superHeroName);
 typedef OnFinish = void Function();
 
-typedef OnLocalStream = void Function(MediaStream stream);
-typedef OnRemoteStream = void Function(MediaStream stream);
+typedef OnRemoteStream = void Function(MediaStream local, MediaStream remote);
 
 class Signaling {
   IO.Socket _socket;
@@ -29,10 +28,9 @@ class Signaling {
   OnDisconnected onDisconnected;
   OnFinish onFinish;
 
-  OnLocalStream onLocalStream;
   OnRemoteStream onRemoteStream;
 
-  MediaStream _localStream;
+  MediaStream _localStream, _remoteStream;
 
   RTCPeerConnection _peer;
 
@@ -41,7 +39,7 @@ class Signaling {
 
   RTCSessionDescription _myAnswer;
 
-  Future<void> connect() async {
+  Future<void> _connect() async {
     // const uri = "http://192.168.1.35:5000";
     const uri = "https://backend-super-hero-call.herokuapp.com";
     _socket = IO.io(uri, <String, dynamic>{
@@ -106,12 +104,14 @@ class Signaling {
 
     _socket.on('on-disconnected', (data) {
       if (onDisconnected != null) {
+        _finish();
         onDisconnected(data);
       }
     });
 
     _socket.on('on-finish-call', (_) {
       if (onFinish != null) {
+        _finish();
         onFinish();
       }
     });
@@ -121,14 +121,10 @@ class Signaling {
     });
   }
 
-  getUserMedia() async {
+  init() async {
     _localStream = await navigator.getUserMedia(
         WebrtcConfig.mediaConstraints); // get the user media stream
-
-    if (onLocalStream != null) {
-      //send the my stream to home screen
-      onLocalStream(_localStream);
-    }
+    _connect();
   }
 
   Future<RTCPeerConnection> createPeer() async {
@@ -158,7 +154,8 @@ class Signaling {
   void acceptOrDeclineCall(String requestId, bool accept) async {
     if (accept) {
       _peer = await createPeer();
-      await _peer.setRemoteDescription(_incommingOffer); // set the remote description
+      await _peer
+          .setRemoteDescription(_incommingOffer); // set the remote description
       _myAnswer = await _peer.createAnswer(WebrtcConfig.offerSdpConstraints);
       await _peer.setLocalDescription(
           _myAnswer); //set local destrintion with my answer
@@ -171,7 +168,8 @@ class Signaling {
   gotRemoteStream(MediaStream remoteStream) {
     //send the remote stream to home screen
     if (onRemoteStream != null) {
-      onRemoteStream(remoteStream);
+      _remoteStream = remoteStream;
+      onRemoteStream(_localStream, remoteStream);
     }
   }
 
@@ -195,8 +193,15 @@ class Signaling {
     _socket?.emit('cancel-request');
   }
 
-  void finishCall() {
+  _finish() {
     _him = null;
+    if (_remoteStream != null) {
+      _peer.close();
+    }
+  }
+
+  void finishCall() {
+    _finish();
     _socket?.emit('finish-call');
   }
 

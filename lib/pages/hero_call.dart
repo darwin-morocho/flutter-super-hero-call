@@ -13,9 +13,7 @@ class HeroCall extends StatelessWidget {
         backgroundColor: Color(0xff263238),
         body: Container(
           width: double.infinity,
-          child: SafeArea(
-            child: MyStatus(),
-          ),
+          child: MyStatus(),
         ),
       ),
     );

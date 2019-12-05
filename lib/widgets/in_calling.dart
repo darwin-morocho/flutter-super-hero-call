@@ -32,7 +32,11 @@ class InCalling extends StatelessWidget {
             ),
           ),
           Positioned.fill(
-            child: RTCVideoView(appStateBloc.remoteRenderer),
+            child: Transform.scale(
+              alignment: Alignment.center,
+              scale: 1.5,
+              child: RTCVideoView(appStateBloc.remoteRenderer),
+            ),
           ),
           Positioned(
             bottom: 120,
@@ -55,28 +59,30 @@ class InCalling extends StatelessWidget {
             bottom: 20,
             left: 0,
             right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                FloatingActionButton(
-                  onPressed: () {},
-                  child: Icon(Icons.mic, size: 35),
-                ),
-                CupertinoButton(
-                  onPressed: () {
-                    //finish the call
-                    appStateBloc.add(AppStateEvent.FinishCall());
-                  },
-                  borderRadius: BorderRadius.circular(30),
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                  color: Colors.redAccent,
-                  child: Icon(Icons.call_end, size: 40),
-                ),
-                FloatingActionButton(
-                  onPressed: () {},
-                  child: Icon(Icons.camera_front, size: 35),
-                ),
-              ],
+            child: SafeArea(
+                          child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  FloatingActionButton(
+                    onPressed: () {},
+                    child: Icon(Icons.mic, size: 35),
+                  ),
+                  CupertinoButton(
+                    onPressed: () {
+                      //finish the call
+                      appStateBloc.add(AppStateEvent.FinishCall());
+                    },
+                    borderRadius: BorderRadius.circular(30),
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                    color: Colors.redAccent,
+                    child: Icon(Icons.call_end, size: 40),
+                  ),
+                  FloatingActionButton(
+                    onPressed: () {},
+                    child: Icon(Icons.camera_front, size: 35),
+                  ),
+                ],
+              ),
             ),
           )
         ],

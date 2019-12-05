@@ -97,6 +97,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.1.3"
+  flutter_incall_manager:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "9b9bc66528e681663b685cefdcd13b23d78f39dc"
+      url: "https://github.com/GioviQ/flutter-incall-manager.git"
+    source: git
+    version: "0.0.1"
   flutter_spinkit:
     dependency: "direct main"
     description:

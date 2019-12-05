@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:super_hero_call/blocs/me_bloc/app_state_bloc.dart';
 import 'pages/hero_call.dart';
-import 'pages/permissions.dart';
 
 void main() async {
   final ph = PermissionHandler();
@@ -35,9 +32,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      home: permissionsOk ? HeroCall() : PermissionPage(),
+      home: HeroCall(),
       debugShowCheckedModeBanner: false,
-      routes: {'hero-call': (_) => HeroCall()},
     );
   }
 }
