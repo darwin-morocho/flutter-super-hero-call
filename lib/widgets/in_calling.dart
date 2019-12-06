@@ -50,7 +50,6 @@ class InCalling extends StatelessWidget {
                     child: Container(
                       width: 480,
                       height: 640,
-                      color: Color(0xfff0f0f0),
                       child: RTCVideoView(appStateBloc.localRenderer),
                     ),
                   ),

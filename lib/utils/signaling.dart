@@ -36,8 +36,6 @@ class Signaling {
   RTCSessionDescription _incommingOffer;
   RTCSessionDescription _myAnswer;
 
-  bool _isFrontCamera = true;
-
   Future<void> _connect() async {
     // const uri = "http://192.168.1.35:5000";
     const uri = "https://backend-super-hero-call.herokuapp.com";
@@ -209,7 +207,6 @@ class Signaling {
 
   // switch front/back camera
   Future<void> switchCamera() async {
-    _isFrontCamera = !_isFrontCamera;
     await _localStream?.getVideoTracks()[0].switchCamera();
   }
 
@@ -218,9 +215,7 @@ class Signaling {
     _him = null;
     if (_remoteStream != null) {
       microphoneEnabled(true);
-      if (!_isFrontCamera) {
-        switchCamera();
-      }
+
       _remoteStream?.dispose();
       _peer?.close();
       _peer = null;
