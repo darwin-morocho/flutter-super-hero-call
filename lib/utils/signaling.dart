@@ -143,7 +143,7 @@ class Signaling {
         print("enviando candidate");
         // send the ICE candidate to the other user into the call
         _socket
-            ?.emit('candidate', {'to': _him, 'candidate': candidate.toMap()});
+            ?.emit('candidate', {'him': _him, 'candidate': candidate.toMap()});
       }
     };
     return peer;
@@ -207,7 +207,7 @@ class Signaling {
 
   // switch front/back camera
   Future<void> switchCamera() async {
-    await _localStream?.getVideoTracks()[0].switchCamera();
+    _localStream?.getVideoTracks()[0].switchCamera();
   }
 
   //when the call has been finished whe need close the current peer connection

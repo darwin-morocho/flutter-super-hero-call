@@ -171,9 +171,10 @@ class AppStateBloc extends Bloc<Event.AppStateEvent, AppState> {
       _remoteRenderer.srcObject = null;
       yield* getConnected(state.me);
     } else if (event is Event.SwitchCamera) {
-      await _signaling.switchCamera();
-      yield state.copyWith(
+       yield state.copyWith(
           status: Status.inCalling, usefrontCamera: !state.usefrontCamera);
+     _signaling.switchCamera();
+     
     } else if (event is Event.EnableDisableMicrophone) {
       final enabled = !state.microphoneEnabled;
       _signaling.microphoneEnabled(enabled);
